@@ -97,12 +97,32 @@ class TwitterCrawler:
         except pymongo.errors.ConnectionFailure, e:
             print "Could not connect to MongoDB: %s" % e 
 
+
+    def loadDataFromHDFS(self, filename):
+        fileObj = h5py.File(filename, 'r')
+        self.idList = fileObj["IDs"] 
+        self.features = fileObj["Features"]
+        self.viralityList = fileObj["Virality"]
+        # print self.idList[60000]
+        # print len(self.idList)
+        # print self.features
+        # print self.viralityList
+        # print self.features[0]
+        # print self.features.attrs
+
+
 def main():
     wrapper = TwitterCrawler()
     inputFilename = "../data/qrels.microblog2013.txt"
+    hdfsFilename = "../data/output.hdf5"
     outputDatabaseName = "Twitter"
     collectionName = "Tweets"
-    wrapper.crawl(inputFilename, outputDatabaseName, collectionName)
+    try:
+        wrapper.crawl(inputFilename, outputDatabaseName, collectionName)
+    except:
+        wrapper.loadDataFromHDFS(hdfsFilename)
+
+
 
 
 if __name__ == "__main__":
