@@ -55,3 +55,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Data
+*.dat
+
+# File containing access tokens
+*auth.py
