@@ -6,6 +6,7 @@ import h5py
 import json
 import tweepy
 import pymongo
+import os
 
 # Allow access to raw json data of status objects
 @classmethod
@@ -80,7 +81,7 @@ class TwitterCrawler:
                 for line in f:
                     # extract and collect tweet ID
                     parts = line.split()
-                    tweetID = parts[2]
+                    tweetID = parts[0]
                     tweetIDs.append(tweetID)
                     tweetCount += 1
                     # when 100 tweet IDs have been collected, make API call
@@ -100,11 +101,15 @@ class TwitterCrawler:
 
 def main():
     wrapper = TwitterCrawler()
-    inputFilename = "../data/qrels.microblog2013.txt"
+    dataDirectory = "../data/20110123/"
     hdfsFilename = "../data/output.hdf5"
     outputDatabaseName = "Twitter"
     collectionName = "Tweets"
-    wrapper.crawl(inputFilename, outputDatabaseName, collectionName)
+    fileNames = os.listdir(dataDirectory)
+    # Iterate over all files contained in data directory
+    for filename in fileNames:
+        inputFilename = dataDirectory+filename
+        wrapper.crawl(inputFilename, outputDatabaseName, collectionName)
     
 
 if __name__ == "__main__":
