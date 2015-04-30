@@ -34,7 +34,7 @@ class StdOutListener(StreamListener):
 			self.collection.insert(datajson)
 
 			#See Twitter reference for what fields are included -- https://dev.twitter.com/docs/platform-objects/tweets
-			text=datajson["text"] #The text of the tweet
+			text=datajson["text"].encode("utf-8") #The text of the tweet
 			self.counter += 1
 			print(str(self.counter) + " " +text) #Print it out
 
