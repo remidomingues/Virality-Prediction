@@ -46,7 +46,7 @@ class RetweetUpdater:
 
             print "Start Twitter API calls"
             # Iterate over all documents
-            for doc in collection.find({}):
+            for doc in collection.find(no_cursor_timeout=True):
                 tweetID = doc['id']
                 doc['retweet_count'] = -1
                 collection.save(doc)
