@@ -41,6 +41,9 @@ class ViralityPrediction:
 
         return values
 
+    def score(self, X, Y):
+         return np.mean(X - Y) ** 2
+
 
 if __name__ == "__main__":
     vp = ViralityPrediction()
@@ -56,8 +59,12 @@ if __name__ == "__main__":
         virality[hashtag] = sum(np.array(vir)[:, 0])
 
     print "Predicted hashtags virality:"
-    print vp.predict(hashtags_features)
+    result = vp.predict(hashtags_features)
+    print result
     print vp.predict(hashtags_features, 100)
     print "Expected hashtags virality:"
     print virality
+    print "Residual sum of squares: {:.2f}".format(vp.score(
+        np.array([result[h] for h in hashtags]),
+        np.array([virality[h] for h in hashtags])))
 
