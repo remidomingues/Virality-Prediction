@@ -2,11 +2,8 @@
 __pycache__/
 *.py[cod]
 *.pyc
-data/community2013
-data/trec2011
-data/mongo_dump.tar.gz
-code/output.json
-data/features.hdf5
+data/
+.fuse_hidden*
 
 # C extensions
 *.so

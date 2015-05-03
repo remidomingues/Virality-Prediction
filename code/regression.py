@@ -4,7 +4,7 @@ import h5py
 
 class RegressionModel:
     # HDFS file path
-    HDFS_FILEPATH = "../data/output.hdf5"
+    HDFS_FILEPATH = "../data/features.hdf5"
     # Traing set proportion
     TRAINING_SIZE = 0.8
 
@@ -24,14 +24,17 @@ class RegressionModel:
         fileObj = h5py.File(self.HDFS_FILEPATH, 'r')
         idList = fileObj["IDs"]
         features = fileObj["Features"]
-        viralityList = fileObj["Virality"]
-        return [idList, features, viralityList]
+        self.feature_size = len(features)
+        virality = fileObj["Virality"]
+        self.virality_size = len(virality)
+        return [idList, features, virality]
 
     def load_dataset(self):
         # Import data
         hdfs_data = self.loadDataFromHDFS()
         # Concatenate the three arrays into one along the second axis
         data = np.c_[hdfs_data[0], hdfs_data[1], hdfs_data[2]]
+        print data[0]
         # Shuffle data
         np.random.shuffle(data)
         # Split dataset into training and testing sets
@@ -42,9 +45,9 @@ class RegressionModel:
     def train(self):
         print "Training model..."
         # Features
-        X_train = self.training_set[:, 1:11]
+        X_train = self.training_set[:, 1:self.feature_size+1]
         # Retweet count
-        Y_train = self.training_set[:, 11]
+        Y_train = self.training_set[:, self.feature_size+1]
         # Model training
         self.clf = linear_model.BayesianRidge()
         self.clf.fit(X_train, Y_train)
