@@ -22,12 +22,12 @@ If you get trouble installing the module `h5py`, try installing the correspondin
 Run
 ---
 - Fill your Twitter API key in `authExample.py` and rename the file `auth.py`
-- Execute `python stream.py` to get as many tweets as you want
+- Execute `python stream.py` to get as many tweets as you want (at least 3 days if you can)
 - Add an index on the tweets ID:
     - `mongo`
-    - `db['Tweets'].createIndex({id: 1}, {unique: true})`
-- Execute `python retweetUpdated.py` a few days later to update the number of retweets of each tweet
-- Extract the feature from the tweets stored in database: `python featuresExtractor.py`
+    - `db.Tweets.createIndex({id: 1}, {unique: true, dropDups: true})`
+- Execute `python retweetUpdated.py` a few days later to update the number of retweets of each tweet. This timeframe will be the one of your model when predicting the virality of a hashtag
+- Extract the features from the tweets stored in database: `python featuresExtractor.py`
 - Train your regression model to predict the number of retweets based on the features: `python regression.py`
 - Build an inverted index, giving a list of tweets for each hashtag: `python hashtagIndex.py`
 - Predict the virality of a hashtag: `python viralityPrediction.py`

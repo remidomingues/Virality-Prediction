@@ -4,7 +4,7 @@ import h5py
 
 class RegressionModel:
     # HDFS file path
-    HDFS_FILEPATH = "../data/features.hdf5"
+    HDFS_FILEPATH = "../data/output.hdf5"
     # Traing set proportion
     TRAINING_SIZE = 0.8
 
@@ -24,9 +24,9 @@ class RegressionModel:
         fileObj = h5py.File(self.HDFS_FILEPATH, 'r')
         idList = fileObj["IDs"]
         features = fileObj["Features"]
-        self.feature_size = len(features)
+        self.feature_size = len(features[0])
         virality = fileObj["Virality"]
-        self.virality_size = len(virality)
+        self.virality_size = len(virality[0])
         return [idList, features, virality]
 
     def load_dataset(self):
@@ -34,7 +34,6 @@ class RegressionModel:
         hdfs_data = self.loadDataFromHDFS()
         # Concatenate the three arrays into one along the second axis
         data = np.c_[hdfs_data[0], hdfs_data[1], hdfs_data[2]]
-        print data[0]
         # Shuffle data
         np.random.shuffle(data)
         # Split dataset into training and testing sets
