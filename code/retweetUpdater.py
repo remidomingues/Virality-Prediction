@@ -29,8 +29,7 @@ class RetweetUpdater:
                 # extract features of each tweet
                 for tweet in tweets:
                     tweetID = tweet.id
-                    dbId = tweet._id
-                    doc = collection.find_one({"_id": dbId})
+                    doc = collection.find_one({"id": tweetID})
                     doc['retweet_count'] = tweet.retweet_count
                     collection.save(doc)
                 break
@@ -54,6 +53,7 @@ class RetweetUpdater:
             # Iterate over all documents
             for doc in collection.find(no_cursor_timeout=True):
                 tweetID = doc['id']
+                if (doc['retweet_count'] > 0) continue;
                 doc['retweet_count'] = -1
                 collection.save(doc)
                 tweetIDs.append(tweetID)
