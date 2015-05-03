@@ -26,7 +26,7 @@ class RegressionModel:
         idList = fileObj["IDs"]
         features = fileObj["Features"]
         virality = fileObj["Virality"]
-        return [idList, features, virality]
+        return idList, features, virality
 
     @staticmethod
     def load_datasets():
@@ -35,16 +35,16 @@ class RegressionModel:
         the tweets featured followed by the retweet count
         """
         # Import data
-        hdfs_data = RegressionModel.__loadDataFromHDFS()
+        idList, features, virality = RegressionModel.__loadDataFromHDFS()
         # Concatenate the arrays into one along the second axis
-        data = np.c_[hdfs_data[1], hdfs_data[2][:, 0]]
+        data = np.c_[features, virality[:, 0]]
         # Shuffle data
         np.random.shuffle(data)
         # Split dataset into training and testing sets
         size = int(len(data) * RegressionModel.TRAINING_SIZE)
         training_set = data[:size]
         testing_set = data[len(data)-size:]
-        return [training_set, testing_set]
+        return training_set, testing_set
 
     def train(self, training_set):
         """
@@ -86,10 +86,10 @@ class RegressionModel:
         """
         Load the classifier from a binary file
         """
+        print "Loading regression model..."
         try:
             with open(self.SERIALIZATION_FILE + ".pkl", "rb") as f:
                 self.clf = pickle.load(f)
-            print "Regression model loaded"
             return True
         except:
             print "Could not load regression model"
@@ -109,7 +109,7 @@ class RegressionModel:
 
 
 if __name__ == "__main__":
-    [training_set, testing_set] = RegressionModel.load_datasets()
+    training_set, testing_set = RegressionModel.load_datasets()
     model = RegressionModel()
     if not model.load():
         model.train(training_set)

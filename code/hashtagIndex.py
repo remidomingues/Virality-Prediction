@@ -32,7 +32,6 @@ class HashtagIndex:
                     else:
                         #Add tweet id to new hashtag
                         self.index[hashtag["text"]] = [tweet["id"]]
-            print "Saving index to file"
             #Save to .pkl file
             self.saveIndex()
         except:
@@ -40,11 +39,13 @@ class HashtagIndex:
 
     #Save index to file
     def saveIndex(self):
+        print "Saving index to file"
         with open(self.name + ".pkl", "wb") as f:
             pickle.dump(self.index, f, pickle.HIGHEST_PROTOCOL)
 
     #Load index from file
     def loadIndex(self):
+        print "Loading hashtags index..."
         with open(self.name + ".pkl", "rb") as f:
             self.index = pickle.load(f)
 
@@ -57,7 +58,8 @@ class HashtagIndex:
 
 def main():
     hashtagIndex = HashtagIndex()
-    print hashtagIndex.find("nomore") #Should print [592958600357793793L]
+    print hashtagIndex.find("nomore") # Should print [592958600357793793L]
+    print hashtagIndex.find('OneDirection')
 
 if __name__ == "__main__":
     main()
