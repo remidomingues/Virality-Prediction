@@ -39,7 +39,7 @@ class FeatureExtractor:
             features.append(1)
         else:
             features.append(0)
-        #features.append(len(tweet['text']))
+        features.append(len(tweet['text']))
         featureList.append(features)
         virality = []
         virality.append(tweet['retweet_count'])
