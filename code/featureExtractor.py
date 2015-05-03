@@ -39,7 +39,7 @@ class FeatureExtractor:
             features.append(1)
         else:
             features.append(0)
-        features.append(len(tweet['text']))
+        #features.append(len(tweet['text']))
         featureList.append(features)
         virality = []
         virality.append(tweet['retweet_count'])
@@ -55,17 +55,15 @@ class FeatureExtractor:
         viralityList = []
 
         try:
-            print "Connecting to database"
             conn = pymongo.MongoClient()
-            outputDB = conn[FeatureExtractor.TWITTER_DATABASE]
-            collection = outputDB[FeatureExtractor.TWEETS_TABLE]
-            print "Extracting features"
+            db = conn[FeatureExtractor.TWITTER_DATABASE]
+            collection = db[FeatureExtractor.TWEETS_TABLE]
             if tweets_id is None:
                 for tweet in collection.find():
                     FeatureExtractor.getFeatures(tweet, idList, featureList, viralityList)
             else:
                 for tweet_id in tweets_id:
-                    FeatureExtractor.getFeatures(collection.find({'id': tweet_id}),
+                    FeatureExtractor.getFeatures(db[FeatureExtractor.TWEETS_TABLE].find_one({"id": tweet_id}),
                         idList, featureList, viralityList)
 
         except pymongo.errors.ConnectionFailure, e:
@@ -100,5 +98,6 @@ class FeatureExtractor:
 
 
 if __name__ == "__main__":
+    _, _, _ = FeatureExtractor.extractFeatures([592958600357793793L, 592673811239149568L])
     idList, featureList, viralityList = FeatureExtractor.extractFeatures()
     FeatureExtractor.saveToFile(idList, featureList, viralityList)
