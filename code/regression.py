@@ -82,10 +82,37 @@ class RegressionModel:
         """
         return self.clf.predict(features)
 
+    def load(self):
+        """
+        Load the classifier from a binary file
+        """
+        try:
+            with open(self.SERIALIZATION_FILE + ".pkl", "rb") as f:
+                self.clf = pickle.load(f)
+            print "Regression model loaded"
+            return True
+        except:
+            print "Could not load regression model"
+            return False
+
+    def dump(self):
+        """
+        Export the classifier in a binary file
+        """
+        print "Exporting regression model..."
+        try:
+            with open(self.SERIALIZATION_FILE + ".pkl", "wb") as f:
+                pickle.dump(self.clf, f, pickle.HIGHEST_PROTOCOL)
+            return True
+        except:
+            return False
+
 
 if __name__ == "__main__":
     [training_set, testing_set] = RegressionModel.load_datasets()
     model = RegressionModel()
-    model.train(training_set)
+    if not model.load():
+        model.train(training_set)
+        model.dump()
     model.score(testing_set)
     print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
