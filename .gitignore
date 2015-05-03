@@ -1,6 +1,11 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+*.pyc
+data/community2013
+data/trec2011
+data/mongo_dump.tar.gz
+code/output.json
 
 # C extensions
 *.so

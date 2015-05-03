@@ -1,0 +1,4 @@
+pickle
+tweepy
+pymongo
+h5py
