@@ -25,6 +25,7 @@ class FeatureExtractor:
         dset_features.attrs["Column 7"] = "url_count"
         dset_features.attrs["Column 8"] = "verified_account"
         dset_features.attrs["Column 9"] = "is_a_retweet"
+        dset_features.attrs["Column 10"] = "tweet_length"
         dset_virality = output.create_dataset("Virality", data=(self.viralityList))
         dset_virality.attrs["Column 0"] = "retweet_count"
         dset_virality.attrs["Column 1"] = "favorite_count"
@@ -63,6 +64,7 @@ class FeatureExtractor:
             features.append(1)
         else:
             features.append(0)
+        features.append(len(tweet['text']))
         self.featureList.append(features)
         virality = []
         virality.append(tweet['retweet_count'])
@@ -85,7 +87,7 @@ class FeatureExtractor:
             self.saveToFile(hdfsPath)
 
         except pymongo.errors.ConnectionFailure, e:
-            print "Could not connect to MongoDB: %s" % e 
+            print "Could not connect to MongoDB: %s" % e
 
 
 def main():

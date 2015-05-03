@@ -1,0 +1,6 @@
+numpy
+pickle
+tweepy
+pymongo
+h5py
+sklearn
