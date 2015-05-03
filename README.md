@@ -11,7 +11,7 @@ Technologies
 
 Data
 ----
-The data used is the Twitter 2011 TREC dataset (http://trec.nist.gov/data/tweets).
+The data used is composed of random English tweets crawled from the Twitter API during 3 days.
 
 Setup
 -----
@@ -22,9 +22,12 @@ If you get trouble installing the module `h5py`, try installing the correspondin
 Run
 ---
 - Fill your Twitter API key in `authExample.py` and rename the file `auth.py`
-- [TODO: Run Python scripts to get the data]
+- Execute `python stream.py` to get as many tweets as you want
 - Add an index on the tweets ID:
     - `mongo`
     - `db['Tweets'].createIndex({id: 1}, {unique: true})`
-- TODO [update db]
-- Train your regression model: `python regression.py`
+- Execute `python retweetUpdated.py` a few days later to update the number of retweets of each tweet
+- Extract the feature from the tweets stored in database: `python featuresExtractor.py`
+- Train your regression model to predict the number of retweets based on the features: `python regression.py`
+- Build an inverted index, giving a list of tweets for each hashtag: `python hashtagIndex.py`
+- Predict the virality of a hashtag: `python viralityPrediction.py`
