@@ -1,12 +1,7 @@
-#Enable remote debugging
-import ptvsd
-ptvsd.enable_attach(secret = 'paulisdebuggingfromspace', address = ('0.0.0.0', 1243))
-
 from tweepy import OAuthHandler
 from tweepy import API
 from tweepy import TweepError
 from auth import TwitterAuth
-
 import time
 import tweepy
 import pymongo
@@ -53,7 +48,6 @@ class RetweetUpdater:
             # Iterate over all documents
             for doc in collection.find(no_cursor_timeout=True):
                 tweetID = doc['id']
-                if (doc['retweet_count'] > 0) continue;
                 doc['retweet_count'] = -1
                 collection.save(doc)
                 tweetIDs.append(tweetID)
