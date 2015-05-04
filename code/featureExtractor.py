@@ -2,7 +2,7 @@ import pymongo
 import h5py
 
 class FeatureExtractor:
-    HDF5_FILEPATH = "../data/features.hdf5"
+    HDF5_FILEPATH = "../data/output.hdf5"
     TWITTER_DATABASE = "Twitter"
     TWEETS_TABLE = "Tweets"
 
@@ -49,7 +49,7 @@ class FeatureExtractor:
 
     # connect to MongoDB database and get all tweets then extract features for each tweet
     @staticmethod
-    def loadFromDB(tweets_id=None):
+    def loadFromDB(limit=0, tweets_id=None):
         ids = []
         featuresList = []
         viralityList = []
@@ -59,7 +59,7 @@ class FeatureExtractor:
             db = conn[FeatureExtractor.TWITTER_DATABASE]
             collection = db[FeatureExtractor.TWEETS_TABLE]
             if tweets_id is None:
-                for tweet in collection.find():
+                for tweet in collection.find(limit=limit):
                     FeatureExtractor.__getFeatures(tweet, ids, featuresList, viralityList)
             else:
                 for tweet_id in tweets_id:
@@ -84,17 +84,18 @@ class FeatureExtractor:
         """
         print "Loading features..."
         try:
-            with h5py.File(FeatureExtractor.HDF5_FILEPATH, 'r') as f:
-                ids = fileObj["IDs"]
-                features = fileObj["Features"]
-                virality = fileObj["Virality"]
-                return ids, features, virality
+            f = h5py.File(FeatureExtractor.HDF5_FILEPATH, 'r')
+            ids = f["IDs"]
+            features = f["Features"]
+            virality = f["Virality"]
+            return ids, features, virality
         except:
+            print "> Could not load features"
             if force:
+                print "Loading features from database..."
                 ids, features, virality = FeatureExtractor.loadFromDB()
                 FeatureExtractor.dump(ids, features, virality)
                 return ids, features, virality
-            print "> Could not load features"
             return None, None, None
 
     @staticmethod
