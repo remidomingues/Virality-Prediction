@@ -54,7 +54,7 @@ if __name__ == "__main__":
     hashtags = ['OneDirection', 'news', 'bigbang', 'nowplaying']
     print "Extracting features..."
     for hashtag in hashtags:
-        _, featureList, vir = FeatureExtractor.extractFeatures(hashtagIndex.find(hashtag))
+        _, featureList, vir = FeatureExtractor.loadFromDB(hashtagIndex.find(hashtag))
         hashtags_features[hashtag] = featureList
         virality[hashtag] = sum(np.array(vir)[:, 0])
 

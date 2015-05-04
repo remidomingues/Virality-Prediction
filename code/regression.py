@@ -1,32 +1,13 @@
 from sklearn import linear_model
+from featureExtractor import FeatureExtractor
 import numpy as np
-import h5py
 import pickle
 
 class RegressionModel:
-    # HDFS file path
-    HDFS_FILEPATH = "../data/output.hdf5"
     # Traing set proportion
     TRAINING_SIZE = 0.8
     # Serialization file
     SERIALIZATION_FILE = "../data/regression_model"
-
-    @staticmethod
-    def __loadDataFromHDFS():
-        """
-        Load data from the specified HDFS file. Structure is Dataset => Attributes
-        IDs => ID
-        Features => [followers_count, friends_count, listed_count, statuses_count,
-                     hashtags_count, media_count, user_mention_count, url_count,
-                     verified_account, is_a_retweet, tweet_length]
-        Virality => [retweet_count, favorite_count, combined_count]
-        """
-        print "Importing data..."
-        fileObj = h5py.File(RegressionModel.HDFS_FILEPATH, 'r')
-        idList = fileObj["IDs"]
-        features = fileObj["Features"]
-        virality = fileObj["Virality"]
-        return idList, features, virality
 
     @staticmethod
     def load_datasets():
@@ -35,9 +16,9 @@ class RegressionModel:
         the tweets featured followed by the retweet count
         """
         # Import data
-        idList, features, virality = RegressionModel.__loadDataFromHDFS()
+        _, features, virality = FeatureExtractor.load(force=True)
         # Concatenate the arrays into one along the second axis
-        data = np.c_[features, virality[:, 0]]
+        data = np.c_[features, [vir[0] for vir in virality]]
         # Shuffle data
         np.random.shuffle(data)
         # Split dataset into training and testing sets
@@ -92,7 +73,7 @@ class RegressionModel:
                 self.clf = pickle.load(f)
             return True
         except:
-            print "Could not load regression model"
+            print "> Could not load regression model"
             return False
 
     def dump(self):
