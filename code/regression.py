@@ -17,7 +17,10 @@ class RegressionModel:
         the tweets featured followed by the retweet count
         """
         # Import data
+        # SWITCH THE FOLLOWING LINES TO BYPASS THE FEATURE EXTRACTOR BUG ===============
         _, features, virality = FeatureExtractor.load(force=True)
+        # _, features, virality = FeatureExtractor.loadFromDB()
+        # ==============================================================================
         print "Building datasets..."
         # Concatenate the arrays into one along the second axis
         data = np.c_[features, [vir[0] for vir in virality]]
@@ -78,12 +81,18 @@ class RegressionModel:
         """
         print "Training model..."
         # Features
-
         X_train = training_set[:, :-1]
         # Retweet count
         Y_train = training_set[:, -1]
         # Model training
-        self.clf = linear_model.BayesianRidge(normalize)
+        self.clf = linear_model.Lasso(normalize=normalize)
+
+        print np.amin(Y_train)
+        print np.amin(X_train)
+        print np.max(Y_train)
+        print np.max(X_train)
+        print X_train[np.argmin(X_train)/11]
+
         self.clf.fit(X_train, Y_train)
 
     def score(self, testing_set):
@@ -138,7 +147,7 @@ if __name__ == "__main__":
     training_set, testing_set = RegressionModel.load_datasets(balance=True, viral_threshold=50)
     model = RegressionModel()
     if not model.load():
-        model.train(training_set, normalize=False)
+        model.train(training_set, normalize=True)
         model.dump()
     model.score(testing_set)
     print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])

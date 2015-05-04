@@ -2,7 +2,7 @@ import pymongo
 import h5py
 
 class FeatureExtractor:
-    HDF5_FILEPATH = "../data/output.hdf5"
+    HDF5_FILEPATH = "../data/features.hdf5"
     TWITTER_DATABASE = "Twitter"
     TWEETS_TABLE = "Tweets"
 
@@ -11,9 +11,9 @@ class FeatureExtractor:
     def __getFeatures(tweet, ids, featuresList, viralityList):
         ids.append(tweet['id'])
         features = []
-        features.append(tweet['user']['followers_count'])
-        features.append(tweet['user']['friends_count'])
-        features.append(tweet['user']['listed_count'])
+        features.append(max(tweet['user']['followers_count'], 0))
+        features.append(max(tweet['user']['friends_count'], 0))
+        features.append(max(tweet['user']['listed_count'], 0))
         features.append(tweet['user']['statuses_count'])
         if 'hashtags' in tweet['entities']:
             features.append(len(tweet['entities']['hashtags']))
@@ -42,9 +42,9 @@ class FeatureExtractor:
         features.append(len(tweet['text']))
         featuresList.append(features)
         virality = []
-        virality.append(tweet['retweet_count'])
-        virality.append(tweet['favorite_count'])
-        virality.append(tweet['retweet_count'] + tweet['favorite_count'])
+        virality.append(max(tweet['retweet_count'], 0))
+        virality.append(max(tweet['favorite_count'], 0))
+        virality.append(max(tweet['retweet_count'], 0) + max(tweet['favorite_count'], 0))
         viralityList.append(virality)
 
     # connect to MongoDB database and get all tweets then extract features for each tweet
@@ -128,6 +128,6 @@ class FeatureExtractor:
 
 if __name__ == "__main__":
     ids, features, virality = FeatureExtractor.load()
-    ids, features, virality = FeatureExtractor.loadFromDB([592958600357793793L, 592673811239149568L])
+    ids, features, virality = FeatureExtractor.loadFromDB(tweets_id=[592958600357793793L, 592673811239149568L])
     ids, features, virality = FeatureExtractor.loadFromDB()
     FeatureExtractor.dump(ids, features, virality)
