@@ -5,7 +5,7 @@ import numpy as np
 import math
 
 class ViralityPrediction:
-    def __init__(self, balance=False, tweet_threshold=50):
+    def __init__(self, normalize=False, balance=False, tweet_threshold=0, dump_model=True):
         """
         Import or train the regression model
         """
@@ -13,8 +13,9 @@ class ViralityPrediction:
         if not self.model.load():
             training_set, _ = RegressionModel.load_datasets(
                 balance=balance, viral_threshold=tweet_threshold)
-            self.model.train(training_set, normalize=True)
-            self.model.dump()
+            self.model.train(training_set, normalize=normalize)
+            if dump_model:
+                self.model.dump()
 
     def predict(self, hashtags, hashtag_threshold=None):
         """
@@ -47,7 +48,7 @@ class ViralityPrediction:
 
 
 if __name__ == "__main__":
-    vp = ViralityPrediction(balance=True, tweet_threshold=150)
+    vp = ViralityPrediction(normalize=True, balance=False, dump_model=False)
     hashtagIndex = HashtagIndex()
 
     virality = {}
@@ -62,10 +63,9 @@ if __name__ == "__main__":
     print "Predicted hashtags virality:"
     result = vp.predict(hashtags_features)
     print result
-    print vp.predict(hashtags_features, hashtag_threshold=50)
+    # print vp.predict(hashtags_features, hashtag_threshold=50)
     print "Expected hashtags virality:"
     print virality
     print "Residual sum of squares: {:.2f}".format(vp.score(
         np.array([result[h] for h in hashtags]),
         np.array([virality[h] for h in hashtags])))
-

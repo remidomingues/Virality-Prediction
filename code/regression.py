@@ -11,19 +11,17 @@ class RegressionModel:
     SERIALIZATION_FILE = "../data/regression_model"
 
     @staticmethod
-    def load_datasets(balance=False, viral_threshold=50):
+    def load_datasets(balance=False, viral_threshold=0):
         """
         Return the training and testing datasets containing
         the tweets featured followed by the retweet count
         """
         # Import data
-        # SWITCH THE FOLLOWING LINES TO BYPASS THE FEATURE EXTRACTOR BUG ===============
         _, features, virality = FeatureExtractor.load(force=True)
-        # _, features, virality = FeatureExtractor.loadFromDB()
-        # ==============================================================================
         print "Building datasets..."
         # Concatenate the arrays into one along the second axis
-        data = np.c_[features, [vir[0] for vir in virality]]
+        data = np.c_[features, np.array(virality)[:, 0]]
+        RegressionModel.__dataset_range(data)
         # Duplicate viral tweets to balance the dataset
         if balance:
             data = RegressionModel.__balance_virality(dataset=data, threshold=viral_threshold)
@@ -58,8 +56,8 @@ class RegressionModel:
         if n_repeat == 0 and mod == 0:
             return dataset
 
-        print "Balancing dataset... ({} virals / {} total: {:.2f}% viral)".format(
-            n_virals, len(virality), (n_virals / float(len(virality) * 100)))
+        print "Balancing dataset... ({:.2f}% viral tweets, dataset size increased by {:.2f}%)".format(
+            (n_virals / float(len(virality)) * 100), 100 * ((len(virality) - n_virals) * 2 / float(len(virality)) - 1))
 
         # Insert n_repeat times each viral tweet in the new_tweets list
         for idx, value in enumerate(virality):
@@ -75,6 +73,12 @@ class RegressionModel:
 
         return np.vstack((dataset, new_tweets))
 
+    @staticmethod
+    def __dataset_range(data):
+        print "Range of feature and virality values:"
+        print "\tmin={}".format(list(np.min(data, axis=0)))
+        print "\tmax={}".format(list(np.max(data, axis=0)))
+
     def train(self, training_set, normalize=False):
         """
         Train the classifier
@@ -85,37 +89,33 @@ class RegressionModel:
         # Retweet count
         Y_train = training_set[:, -1]
         # Model training
-        self.clf = linear_model.Lasso(normalize=normalize)
-
-        print np.amin(Y_train)
-        print np.amin(X_train)
-        print np.max(Y_train)
-        print np.max(X_train)
-        print X_train[np.argmin(X_train)/11]
-
+        self.clf = linear_model.BayesianRidge(normalize=normalize)
         self.clf.fit(X_train, Y_train)
+        print "\tCoefficients: ", list(self.clf.coef_)
 
     def score(self, testing_set):
         """
         Compute benchmarks according to the testing dataset
         """
+        print "Regression score:"
         # Features
         X_test = testing_set[:, :-1]
         # Retweet count
         Y_test = testing_set[:, -1]
         # Model coefficients
-        print "Coefficients: ", self.clf.coef_
         # Mean squared error
-        print "Residual sum of squares: {:.2f}".format(
+        print "\tResidual sum of squares: {:.2f}".format(
             np.mean((self.clf.predict(X_test) - Y_test) ** 2))
         # Variance score: 1 is perfect prediction
-        print "Variance score: %.2f" % self.clf.score(X_test, Y_test)
+        print "\tVariance score: %.3f" % self.clf.score(X_test, Y_test)
 
     def predict(self, features):
         """
         Predict the retweet counts for every tweet based on their features
         """
-        return self.clf.predict(features)
+        result = np.array(self.clf.predict(features))
+        result[result < 0] = 0
+        return result
 
     def load(self):
         """
@@ -144,10 +144,10 @@ class RegressionModel:
 
 
 if __name__ == "__main__":
-    training_set, testing_set = RegressionModel.load_datasets(balance=True, viral_threshold=50)
+    training_set, testing_set = RegressionModel.load_datasets(balance=False)
     model = RegressionModel()
     if not model.load():
         model.train(training_set, normalize=True)
-        model.dump()
+        # model.dump()
     model.score(testing_set)
-    print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
+    # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
