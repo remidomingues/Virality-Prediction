@@ -5,15 +5,17 @@ import numpy as np
 import math
 
 class ViralityPrediction:
-    def __init__(self, normalize=False, balance=False, tweet_threshold=0, dump_model=True):
+    def __init__(self, normalize=False, balance=False, tweet_threshold=0, score=False, dump_model=True):
         """
         Import or train the regression model
         """
         self.model = RegressionModel()
         if not self.model.load():
-            training_set, _ = RegressionModel.load_datasets(
+            training_set, testing_set = RegressionModel.load_datasets(
                 balance=balance, viral_threshold=tweet_threshold)
             self.model.train(training_set, normalize=normalize)
+            if score:
+                self.model.score(testing_set)
             if dump_model:
                 self.model.dump()
 
@@ -48,24 +50,24 @@ class ViralityPrediction:
 
 
 if __name__ == "__main__":
-    vp = ViralityPrediction(normalize=True, balance=False, dump_model=False)
+    vp = ViralityPrediction(normalize=True, balance=False, score=True, dump_model=False)
     hashtagIndex = HashtagIndex()
 
     virality = {}
     hashtags_features = {}
     hashtags = ['OneDirection', 'news', 'bigbang', 'nowplaying']
+    # hashtags = [k for (k, v) in hashtagIndex.items(sort=True, descending=True, min_values=5000)]
     print "Extracting features..."
     for hashtag in hashtags:
         _, featureList, vir = FeatureExtractor.loadFromDB(tweets_id=hashtagIndex.find(hashtag))
         hashtags_features[hashtag] = featureList
         virality[hashtag] = sum(np.array(vir)[:, 0])
 
-    print "Predicted hashtags virality:"
     result = vp.predict(hashtags_features)
-    print result
+    print "\nVirality scores:"
+    print "> Predicted hashtags virality: {}".format(result)
     # print vp.predict(hashtags_features, hashtag_threshold=50)
-    print "Expected hashtags virality:"
-    print virality
-    print "Residual sum of squares: {:.2f}".format(vp.score(
+    print "> Expected hashtags virality: {}".format(virality)
+    print "> Residual sum of squares: {:.2f}".format(vp.score(
         np.array([result[h] for h in hashtags]),
         np.array([virality[h] for h in hashtags])))

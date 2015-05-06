@@ -9,7 +9,6 @@ class FeatureExtractor:
     # extract features from tweet and append them to the lists
     @staticmethod
     def __getFeatures(tweet, ids, featuresList, viralityList):
-        ids.append(tweet['id'])
         features = []
         features.append(max(tweet['user']['followers_count'], 0))
         features.append(max(tweet['user']['friends_count'], 0))
@@ -17,6 +16,8 @@ class FeatureExtractor:
         features.append(max(tweet['user']['statuses_count'], 0))
         if 'hashtags' in tweet['entities']:
             features.append(len(tweet['entities']['hashtags']))
+            if len(tweet['entities']['hashtags']) == 0:
+                return
         else:
             features.append(0)
         if 'media' in tweet['entities']:
@@ -43,11 +44,14 @@ class FeatureExtractor:
             features.append(len(tweet['text']))
         else:
             features.append(0)
-        featuresList.append(features)
+
         virality = []
         virality.append(max(tweet['retweet_count'], 0))
         virality.append(max(tweet['favorite_count'], 0))
         virality.append(max(tweet['retweet_count'], 0) + max(tweet['favorite_count'], 0))
+
+        ids.append(tweet['id'])
+        featuresList.append(features)
         viralityList.append(virality)
 
     # connect to MongoDB database and get all tweets then extract features for each tweet
@@ -91,7 +95,7 @@ class FeatureExtractor:
             ids = f["IDs"]
             features = f["Features"]
             virality = f["Virality"]
-            print "\t{} rows loaded".format(len(ids))
+            print "> {} rows loaded".format(len(ids))
             return ids, features, virality
         except:
             print "> Could not load features"
@@ -99,7 +103,7 @@ class FeatureExtractor:
                 print "Loading features from database..."
                 ids, features, virality = FeatureExtractor.loadFromDB()
                 FeatureExtractor.dump(ids, features, virality)
-                print "\t{} rows loaded".format(len(ids))
+                print "> {} rows loaded".format(len(ids))
                 return ids, features, virality
             return None, None, None
 
@@ -132,7 +136,8 @@ class FeatureExtractor:
 
 
 if __name__ == "__main__":
-    ids, features, virality = FeatureExtractor.loadFromDB(tweets_id=[592958600357793793L, 592673811239149568L])
-    ids, features, virality = FeatureExtractor.loadFromDB(limit=10000)
+    # ids, features, virality = FeatureExtractor.loadFromDB(tweets_id=[592958600357793793L, 592673811239149568L])
+    # ids, features, virality = FeatureExtractor.loadFromDB(limit=10000)
+
     # Load features from DB and dump to disk if required
     ids, features, virality = FeatureExtractor.load(force=True)

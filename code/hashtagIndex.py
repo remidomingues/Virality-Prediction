@@ -2,15 +2,15 @@ import pymongo
 import pickle
 
 class HashtagIndex:
+    INDEX_FILEPATH = "../data/hashtag_index"
+
     def __init__(self):
-        self.name = "../data/hashtag_index"
         self.index = {}
         try:
             self.loadIndex()
         except:
-            print "No index file found"
+            print "Index file not found"
             self.generateIndex("Twitter", "Tweets")
-
 
     # Generate index and save to .pkl file
     def generateIndex(self, outputDatabaseName, collectionName):
@@ -37,13 +37,13 @@ class HashtagIndex:
     # Save index to file
     def saveIndex(self):
         print "Saving index to file"
-        with open(self.name + ".pkl", "wb") as f:
+        with open(HashtagIndex.INDEX_FILEPATH + ".pkl", "wb") as f:
             pickle.dump(self.index, f, pickle.HIGHEST_PROTOCOL)
 
     # Load index from file
     def loadIndex(self):
         print "Loading hashtags index..."
-        with open(self.name + ".pkl", "rb") as f:
+        with open(HashtagIndex.INDEX_FILEPATH + ".pkl", "rb") as f:
             self.index = pickle.load(f)
 
     # Returns a list of tweet ID's for the given hashtag
@@ -53,10 +53,34 @@ class HashtagIndex:
         else:
             return []
 
-def main():
+    def keys(self):
+        """
+        Return an array of hashtags
+        """
+        return self.index.keys()
+
+    def values(self):
+        """
+        Return an array of arrays of tweets ID
+        """
+        return self.index.values()
+
+    def items(self, sort=False, descending=False, min_values=0):
+        """
+        Return the index items, possibly sorted by ascending or descending (descending=True) order
+        Only the items having more than min_values values are returned
+        """
+        if min_values > 1:
+            result = [(k, v) for (k, v) in self.index.items() if len(v) >= min_values]
+        else:
+            result = self.index.items()
+
+        if sort:
+            result = sorted(result, key=lambda (k, v): len(v), reverse=descending)
+
+        return result
+
+if __name__ == "__main__":
     hashtagIndex = HashtagIndex()
     print hashtagIndex.find("nomore") # Should print [592958600357793793L]
     print hashtagIndex.find('OneDirection')
-
-if __name__ == "__main__":
-    main()

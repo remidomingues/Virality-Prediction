@@ -76,8 +76,8 @@ class RegressionModel:
     @staticmethod
     def __dataset_range(data):
         print "Range of feature and virality values:"
-        print "\tmin={}".format(list(np.min(data, axis=0)))
-        print "\tmax={}".format(list(np.max(data, axis=0)))
+        print "> min={}".format(list(np.min(data, axis=0)))
+        print "> max={}".format(list(np.max(data, axis=0)))
 
     def train(self, training_set, normalize=False):
         """
@@ -91,7 +91,7 @@ class RegressionModel:
         # Model training
         self.clf = linear_model.BayesianRidge(normalize=normalize)
         self.clf.fit(X_train, Y_train)
-        print "\tCoefficients: ", list(self.clf.coef_)
+        print "> Coefficients: ", list(self.clf.coef_)
 
     def score(self, testing_set):
         """
@@ -104,10 +104,10 @@ class RegressionModel:
         Y_test = testing_set[:, -1]
         # Model coefficients
         # Mean squared error
-        print "\tResidual sum of squares: {:.2f}".format(
+        print "> Residual sum of squares: {:.2f}".format(
             np.mean((self.clf.predict(X_test) - Y_test) ** 2))
         # Variance score: 1 is perfect prediction
-        print "\tVariance score: %.3f" % self.clf.score(X_test, Y_test)
+        print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
 
     def predict(self, features):
         """
