@@ -10,14 +10,26 @@ class FeatureExtractor:
     @staticmethod
     def __getFeatures(tweet, ids, featuresList, viralityList):
         features = []
-        features.append(max(tweet['user']['followers_count'], 0))
-        features.append(max(tweet['user']['friends_count'], 0))
-        features.append(max(tweet['user']['listed_count'], 0))
-        features.append(max(tweet['user']['statuses_count'], 0))
+        if 'retweeted_status' in tweet:
+            features.append(max(tweet['retweeted_status']['user']['followers_count'], 0))
+            features.append(max(tweet['retweeted_status']['user']['friends_count'], 0))
+            features.append(max(tweet['retweeted_status']['user']['listed_count'], 0))
+            features.append(max(tweet['retweeted_status']['user']['statuses_count'], 0))
+            if tweet['retweeted_status']['user']['verified']:
+                features.append(1)
+            else:
+                features.append(0)
+        else:
+            features.append(max(tweet['user']['followers_count'], 0))
+            features.append(max(tweet['user']['friends_count'], 0))
+            features.append(max(tweet['user']['listed_count'], 0))
+            features.append(max(tweet['user']['statuses_count'], 0))
+            if tweet['user']['verified']:
+                features.append(1)
+            else:
+                features.append(0)
         if 'hashtags' in tweet['entities']:
             features.append(len(tweet['entities']['hashtags']))
-            if len(tweet['entities']['hashtags']) == 0:
-                return
         else:
             features.append(0)
         if 'media' in tweet['entities']:
@@ -30,14 +42,6 @@ class FeatureExtractor:
             features.append(0)
         if 'urls' in tweet['entities']:
             features.append(len(tweet['entities']['urls']))
-        else:
-            features.append(0)
-        if tweet['user']['verified']:
-            features.append(1)
-        else:
-            features.append(0)
-        if 'retweeted_status' in tweet:
-            features.append(1)
         else:
             features.append(0)
         if 'text' in tweet:
