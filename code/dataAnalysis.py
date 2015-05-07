@@ -14,7 +14,7 @@ class DataAnalyser:
         Return the datasets containing the tweets featured followed by the retweet count
         """
         # Import data
-        _, features, virality = FeatureExtractor.load(force=True)
+        _, features, virality = FeatureExtractor.load(force=True, keepTweetWithoutHashtags=True)
         print "Building datasets..."
         # Concatenate the arrays into one along the second axis
         data = np.c_[features, np.array(virality)[:, 0]]

@@ -8,7 +8,7 @@ class FeatureExtractor:
 
     # extract features from tweet and append them to the lists
     @staticmethod
-    def __getFeatures(tweet, ids, featuresList, viralityList):
+    def __getFeatures(tweet, ids, featuresList, viralityList, keepTweetWithoutHashtags):
         features = []
         if 'retweeted_status' in tweet:
             features.append(max(tweet['retweeted_status']['user']['followers_count'], 0))
@@ -30,6 +30,8 @@ class FeatureExtractor:
                 features.append(0)
         if 'hashtags' in tweet['entities']:
             features.append(len(tweet['entities']['hashtags']))
+            if keepTweetWithoutHashtags == False:
+                return
         else:
             features.append(0)
         if 'media' in tweet['entities']:
@@ -60,7 +62,7 @@ class FeatureExtractor:
 
     # connect to MongoDB database and get all tweets then extract features for each tweet
     @staticmethod
-    def loadFromDB(limit=0, tweets_id=None):
+    def loadFromDB(limit=0, tweets_id=None, keepTweetWithoutHashtags=False):
         ids = []
         featuresList = []
         viralityList = []
@@ -71,11 +73,11 @@ class FeatureExtractor:
             collection = db[FeatureExtractor.TWEETS_TABLE]
             if tweets_id is None:
                 for tweet in collection.find(limit=limit):
-                    FeatureExtractor.__getFeatures(tweet, ids, featuresList, viralityList)
+                    FeatureExtractor.__getFeatures(tweet, ids, featuresList, viralityList, keepTweetWithoutHashtags)
             else:
                 for tweet_id in tweets_id:
                     FeatureExtractor.__getFeatures(db[FeatureExtractor.TWEETS_TABLE].find_one({"id": tweet_id}),
-                        ids, featuresList, viralityList)
+                        ids, featuresList, viralityList, keepTweetWithoutHashtags)
 
         except pymongo.errors.ConnectionFailure, e:
             print "> Could not connect to MongoDB: %s" % e
@@ -84,7 +86,7 @@ class FeatureExtractor:
 
 
     @staticmethod
-    def load(force=False):
+    def load(force=False, keepTweetWithoutHashtags=False):
         """
         Load data from the specified HDF5 file. Structure is Dataset => Attributes
         IDs => ID
@@ -105,7 +107,7 @@ class FeatureExtractor:
             print "> Could not load features"
             if force:
                 print "Loading features from database..."
-                ids, features, virality = FeatureExtractor.loadFromDB()
+                ids, features, virality = FeatureExtractor.loadFromDB(keepTweetWithoutHashtags=keepTweetWithoutHashtags)
                 FeatureExtractor.dump(ids, features, virality)
                 print "> {} rows loaded".format(len(ids))
                 return ids, features, virality
