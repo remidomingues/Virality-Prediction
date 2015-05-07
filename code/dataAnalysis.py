@@ -7,6 +7,7 @@ class DataAnalyser:
 
     FEATURE_LABEL = ['followers_count', 'friends_count', 'listed_count', 'statuses_count', 'verified', 'hashtags', 'media', 'user_mentions', 'urls', 'text_len']
     VIRALITY_LABEL = ['retweet_count']
+    PLOT_DIR = "../plots/"
 
     @staticmethod
     def load_datasets(balance=False, viral_threshold=0):
@@ -27,13 +28,17 @@ class DataAnalyser:
 
     @staticmethod
     def plotRetweetInfluence(df):
-        print "Retweet influence:"
-        df.plot(x=DataAnalyser.FEATURE_LABEL[0], y=DataAnalyser.VIRALITY_LABEL[0], kind='scatter')
+        print "Plot retweet influence:"
+        for feature in DataAnalyser.FEATURE_LABEL:
+            print "Feature: " + feature
+            df.plot(x=feature, y=DataAnalyser.VIRALITY_LABEL[0], kind='scatter')
+            plt.savefig(DataAnalyser.PLOT_DIR+feature+"Retweet_count.png", format='png')
+            plt.clf()  # Clear the figure for the next loop
+
 
 
 if __name__ == "__main__":
     df = DataAnalyser.load_datasets(balance=False)
     DataAnalyser.describeData(df)
     DataAnalyser.plotRetweetInfluence(df)
-    plt.show()
 
