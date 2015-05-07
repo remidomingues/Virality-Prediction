@@ -30,9 +30,11 @@ class FeatureExtractor:
                 features.append(0)
         if 'hashtags' in tweet['entities']:
             features.append(len(tweet['entities']['hashtags']))
-            if keepTweetWithoutHashtags == False:
+             if len(tweet['entities']['hashtags']) == 0 and keepTweetWithoutHashtags == False:
                 return
         else:
+            if keepTweetWithoutHashtags == False:
+                return
             features.append(0)
         if 'media' in tweet['entities']:
             features.append(len(tweet['entities']['media']))
