@@ -11,8 +11,9 @@ class RegressionModel:
     TRAINING_SIZE = 0.8
     # Serialization file
     SERIALIZATION_FILE = "../data/regression_model"
-    # Prediction error plot file
+    # Plot files
     ERROR_PLOT_FILENAME = "prediction_error.png"
+    COEF_PLOT_FILENAME = "prediction_error.png"
 
     @staticmethod
     def load_datasets(balance=False, viral_threshold=0):
@@ -83,7 +84,7 @@ class RegressionModel:
         print "> min={}".format(list(np.min(data, axis=0)))
         print "> max={}".format(list(np.max(data, axis=0)))
 
-    def train(self, training_set, normalize=False):
+    def train(self, training_set, normalize=False, showPlot=False, savePlot=False):
         """
         Train the classifier
         """
@@ -97,6 +98,7 @@ class RegressionModel:
         self.clf.fit(X_train, Y_train)
         # Model coefficients
         print "> Coefficients: ", list(self.clf.coef_)
+        self.plot_coefficients(showPlot, savePlot)
 
     def score(self, testing_set, showPlot=False, savePlot=False):
         """
@@ -115,28 +117,7 @@ class RegressionModel:
             np.mean((predictions - Y_test) ** 2))
         # Variance score: 1 is perfect prediction
         print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
-
-        # Plot
-        if showPlot or savePlot:
-            plt.subplot(211)
-            plt.axis([0, max(Y_test), min(predictions), max(Y_test)])
-            plt.xlabel('Expected ' + FeatureExtractor.VIRALITY_LABEL[0])
-            plt.ylabel('Predicted ' + FeatureExtractor.VIRALITY_LABEL[0])
-            plt.title('Prediction score on testing data ({} tweets)'.format(len(X_test)))
-            plt.plot(Y_test, predictions, 'o')
-
-            plt.subplot(212)
-            error = abs(Y_test - predictions)
-            plt.axis([0, max(Y_test), 0, max(error)])
-            plt.xlabel('Expected ' + FeatureExtractor.VIRALITY_LABEL[0])
-            plt.ylabel('Prediction error')
-            plt.plot(Y_test, error, 'o')
-
-            if savePlot:
-                plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.ERROR_PLOT_FILENAME, format='png')
-            if showPlot:
-                plt.show()
-
+        self.plot_testing_error(Y_test, predictions, showPlot, savePlot)
 
     def predict(self, features):
         """
@@ -171,12 +152,52 @@ class RegressionModel:
         except:
             return False
 
+    def plot_testing_error(self, expected, predicted, showPlot=True, savePlot=False):
+        # Plot
+        if showPlot or savePlot:
+            plt.subplot(211)
+            plt.axis([0, max(expected), min(predicted), max(expected)])
+            plt.xlabel('Expected ' + FeatureExtractor.VIRALITY_LABEL[0])
+            plt.ylabel('Predicted ' + FeatureExtractor.VIRALITY_LABEL[0])
+            plt.title('Prediction score on testing data ({} tweets)'.format(len(expected)))
+            plt.plot(expected, predicted, 'o')
+
+            plt.subplot(212)
+            error = abs(expected - predicted)
+            plt.axis([0, max(expected), 0, max(error)])
+            plt.xlabel('Expected ' + FeatureExtractor.VIRALITY_LABEL[0])
+            plt.ylabel('Prediction error')
+            plt.plot(expected, error, 'o')
+
+            if savePlot:
+                plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.ERROR_PLOT_FILENAME, format='png')
+            if showPlot:
+                plt.show()
+
+    def plot_coefficients(self, showPlot=True, savePlot=False):
+        if showPlot or savePlot:
+            y = list(self.clf.coef_)
+            x = np.arange(len(y))
+
+            fig = plt.figure()
+            ax = fig.add_axes([0.1, 0.1, 0.8, 0.8])
+            ax.bar(x, y)
+            ax.set_xticks(x)
+            xtickNames = ax.set_xticklabels(FeatureExtractor.FEATURE_LABEL)
+            plt.setp(xtickNames, rotation=45, fontsize=10)
+            ax.set_title('Regression model coefficients')
+
+            if savePlot:
+                plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.COEF_PLOT_FILENAME, format='png')
+            if showPlot:
+                plt.show()
+
 
 if __name__ == "__main__":
     training_set, testing_set = RegressionModel.load_datasets(balance=True, viral_threshold=50000)
     model = RegressionModel()
     if not model.load():
-        model.train(training_set, normalize=True)
+        model.train(training_set, normalize=True, showPlot=True, savePlot=False)
         # model.dump()
-    model.score(testing_set, showPlot=True, savePlot=True)
+    model.score(testing_set, showPlot=True, savePlot=False)
     # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
