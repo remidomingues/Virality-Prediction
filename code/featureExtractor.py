@@ -53,8 +53,12 @@ class FeatureExtractor:
         else:
             features.append(0)
 
+        retweet_count = tweet['retweet_count']
+        if retweet_count > 3000000:
+            return
+
         virality = []
-        virality.append(max(tweet['retweet_count'], 0))
+        virality.append(max(retweet_count, 0))
         virality.append(max(tweet['favorite_count'], 0))
         virality.append(max(tweet['retweet_count'], 0) + max(tweet['favorite_count'], 0))
 
@@ -145,7 +149,7 @@ class FeatureExtractor:
 
 if __name__ == "__main__":
     # ids, features, virality = FeatureExtractor.loadFromDB(tweets_id=[592958600357793793L, 592673811239149568L])
-    # ids, features, virality = FeatureExtractor.loadFromDB(limit=10000)
+    # ids, features, virality = FeatureExtractor.loadFromDB(limit=0)
 
     # Load features from DB and dump to disk if required
     ids, features, virality = FeatureExtractor.load(force=True)

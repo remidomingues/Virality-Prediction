@@ -50,7 +50,8 @@ class ViralityPrediction:
 
 
 if __name__ == "__main__":
-    vp = ViralityPrediction(normalize=True, balance=False, score=True, dump_model=False)
+    vp = ViralityPrediction(normalize=True, balance=True, tweet_threshold=50000,
+        score=True, dump_model=False)
     hashtagIndex = HashtagIndex()
 
     virality = {}

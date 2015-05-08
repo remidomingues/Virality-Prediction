@@ -98,7 +98,7 @@ class RegressionModel:
         # Model coefficients
         print "> Coefficients: ", list(self.clf.coef_)
 
-    def score(self, testing_set, plot=False, save=False):
+    def score(self, testing_set, showPlot=False, savePlot=False):
         """
         Compute benchmarks according to the testing dataset
         """
@@ -117,9 +117,9 @@ class RegressionModel:
         print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
 
         # Plot
-        if plot:
+        if showPlot or savePlot:
             plt.subplot(211)
-            plt.axis([0, max(Y_test), min(predictions), max(Y_test) ])
+            plt.axis([0, max(Y_test), min(predictions), max(Y_test)])
             plt.xlabel('Expected ' + DataAnalyser.VIRALITY_LABEL[0])
             plt.ylabel('Predicted ' + DataAnalyser.VIRALITY_LABEL[0])
             plt.title('Prediction score on testing data ({} tweets)'.format(len(X_test)))
@@ -127,14 +127,15 @@ class RegressionModel:
 
             plt.subplot(212)
             error = abs(Y_test - predictions)
-            plt.axis([0, max(Y_test), 0, max(error) ])
+            plt.axis([0, max(Y_test), 0, max(error)])
             plt.xlabel('Expected ' + DataAnalyser.VIRALITY_LABEL[0])
             plt.ylabel('Prediction error')
             plt.plot(Y_test, error, 'o')
 
-            if save:
+            if savePlot:
                 plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.ERROR_PLOT_FILENAME, format='png')
-            plt.show()
+            if showPlot:
+                plt.show()
 
 
     def predict(self, features):
@@ -172,10 +173,10 @@ class RegressionModel:
 
 
 if __name__ == "__main__":
-    training_set, testing_set = RegressionModel.load_datasets(balance=False)
+    training_set, testing_set = RegressionModel.load_datasets(balance=True, viral_threshold=50000)
     model = RegressionModel()
     if not model.load():
         model.train(training_set, normalize=True)
         # model.dump()
-    model.score(testing_set, plot=True, save=False)
+    model.score(testing_set, showPlot=True, savePlot=False)
     # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
