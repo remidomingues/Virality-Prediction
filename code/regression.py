@@ -120,15 +120,15 @@ class RegressionModel:
         if showPlot or savePlot:
             plt.subplot(211)
             plt.axis([0, max(Y_test), min(predictions), max(Y_test)])
-            plt.xlabel('Expected ' + DataAnalyser.VIRALITY_LABEL[0])
-            plt.ylabel('Predicted ' + DataAnalyser.VIRALITY_LABEL[0])
+            plt.xlabel('Expected ' + FeatureExtractor.VIRALITY_LABEL[0])
+            plt.ylabel('Predicted ' + FeatureExtractor.VIRALITY_LABEL[0])
             plt.title('Prediction score on testing data ({} tweets)'.format(len(X_test)))
             plt.plot(Y_test, predictions, 'o')
 
             plt.subplot(212)
             error = abs(Y_test - predictions)
             plt.axis([0, max(Y_test), 0, max(error)])
-            plt.xlabel('Expected ' + DataAnalyser.VIRALITY_LABEL[0])
+            plt.xlabel('Expected ' + FeatureExtractor.VIRALITY_LABEL[0])
             plt.ylabel('Prediction error')
             plt.plot(Y_test, error, 'o')
 
@@ -178,5 +178,5 @@ if __name__ == "__main__":
     if not model.load():
         model.train(training_set, normalize=True)
         # model.dump()
-    model.score(testing_set, showPlot=True, savePlot=False)
+    model.score(testing_set, showPlot=True, savePlot=True)
     # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])

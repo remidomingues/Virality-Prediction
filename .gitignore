@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *.pyc
 data/
+plots/
 .fuse_hidden*
 
 # C extensions

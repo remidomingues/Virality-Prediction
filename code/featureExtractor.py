@@ -1,33 +1,46 @@
+from datetime import datetime
 import pymongo
 import h5py
 
 class FeatureExtractor:
+    # Data description
+    FEATURE_LABEL = ['followers_count', 'friends_count', 'listed_count', 'statuses_count',
+        'favourites_count', 'days_from_account_creation', 'verified', 'hashtags', 'media',
+        'user_mentions', 'urls', 'text_len']
+    VIRALITY_LABEL = ['retweet_count']
+
+    # Output file path
     HDF5_FILEPATH = "../data/features.hdf5"
+
+    # MongoDB database and table
     TWITTER_DATABASE = "Twitter"
     TWEETS_TABLE = "Tweets"
+
+    @staticmethod
+    def __twitterDateToDaysFromNow(twitterString):
+        twitterDate = datetime.strptime(twitterString, '%a %b %d %H:%M:%S +0000 %Y')
+        return (datetime.now() - twitterDate).days
 
     # extract features from tweet and append them to the lists
     @staticmethod
     def __getFeatures(tweet, ids, featuresList, viralityList, keepTweetWithoutHashtags):
         features = []
         if 'retweeted_status' in tweet:
-            features.append(max(tweet['retweeted_status']['user']['followers_count'], 0))
-            features.append(max(tweet['retweeted_status']['user']['friends_count'], 0))
-            features.append(max(tweet['retweeted_status']['user']['listed_count'], 0))
-            features.append(max(tweet['retweeted_status']['user']['statuses_count'], 0))
-            if tweet['retweeted_status']['user']['verified']:
-                features.append(1)
-            else:
-                features.append(0)
+            user = tweet['retweeted_status']['user']
         else:
-            features.append(max(tweet['user']['followers_count'], 0))
-            features.append(max(tweet['user']['friends_count'], 0))
-            features.append(max(tweet['user']['listed_count'], 0))
-            features.append(max(tweet['user']['statuses_count'], 0))
-            if tweet['user']['verified']:
-                features.append(1)
-            else:
-                features.append(0)
+            user = tweet['user']
+
+        features.append(max(user['followers_count'], 0))
+        features.append(max(user['friends_count'], 0))
+        features.append(max(user['listed_count'], 0))
+        features.append(max(user['statuses_count'], 0))
+        features.append(max(user['favourites_count'], 0))
+        features.append(FeatureExtractor.__twitterDateToDaysFromNow(user['created_at']))
+        if user['verified']:
+            features.append(1)
+        else:
+            features.append(0)
+
         if 'hashtags' in tweet['entities']:
             features.append(len(tweet['entities']['hashtags']))
             if len(tweet['entities']['hashtags']) == 0 and keepTweetWithoutHashtags == False:
@@ -36,20 +49,24 @@ class FeatureExtractor:
             if keepTweetWithoutHashtags == False:
                 return
             features.append(0)
+
         if 'media' in tweet['entities']:
             features.append(len(tweet['entities']['media']))
         else:
             features.append(0)
+
         if 'user_mentions' in tweet['entities']:
             features.append(len(tweet['entities']['user_mentions']))
         else:
             features.append(0)
+
         if 'urls' in tweet['entities']:
             features.append(len(tweet['entities']['urls']))
         else:
             features.append(0)
+
         if 'text' in tweet:
-            features.append(len(tweet['text']))
+            features.append(min(len(tweet['text']), 140))
         else:
             features.append(0)
 
@@ -126,22 +143,20 @@ class FeatureExtractor:
         """
         print "Exporting features..."
         output = h5py.File(FeatureExtractor.HDF5_FILEPATH, "w")
+
+        # ID
         dset_ids = output.create_dataset("IDs", data=(ids))
         dset_ids.attrs["Column 0"] = "ID"
+
+        # Features
         dset_features = output.create_dataset("Features", data=(featuresList))
-        dset_features.attrs["Column 0"] = "followers_count"
-        dset_features.attrs["Column 1"] = "friends_count"
-        dset_features.attrs["Column 2"] = "listed_count"
-        dset_features.attrs["Column 3"] = "statuses_count"
-        dset_features.attrs["Column 4"] = "hashtags_count"
-        dset_features.attrs["Column 5"] = "media_count"
-        dset_features.attrs["Column 6"] = "user_mention_count"
-        dset_features.attrs["Column 7"] = "url_count"
-        dset_features.attrs["Column 8"] = "verified_account"
-        dset_features.attrs["Column 9"] = "is_a_retweet"
-        dset_features.attrs["Column 10"] = "tweet_length"
+        col_name = 'Column '
+        for idx, label in enumerate(FeatureExtractor.FEATURE_LABEL):
+            dset_features.attrs[col_name + str(idx)] = label
+
+        # Virality
         dset_virality = output.create_dataset("Virality", data=(viralityList))
-        dset_virality.attrs["Column 0"] = "retweet_count"
+        dset_virality.attrs["Column 0"] = FeatureExtractor.VIRALITY_LABEL[0]
         dset_virality.attrs["Column 1"] = "favorite_count"
         dset_virality.attrs["Column 2"] = "combined_count"
         output.close()
