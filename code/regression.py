@@ -13,7 +13,7 @@ class RegressionModel:
     SERIALIZATION_FILE = "../data/regression_model"
     # Plot files
     ERROR_PLOT_FILENAME = "prediction_error.png"
-    COEF_PLOT_FILENAME = "prediction_error.png"
+    COEF_PLOT_FILENAME = "coefficients.png"
 
     @staticmethod
     def load_datasets(balance=False, viral_threshold=0):
@@ -93,6 +93,7 @@ class RegressionModel:
         X_train = training_set[:, :-1]
         # Retweet count
         Y_train = training_set[:, -1]
+
         # Model training
         self.clf = linear_model.BayesianRidge(normalize=normalize)
         self.clf.fit(X_train, Y_train)
@@ -100,7 +101,7 @@ class RegressionModel:
         print "> Coefficients: ", list(self.clf.coef_)
         self.plot_coefficients(showPlot, savePlot)
 
-    def score(self, testing_set, showPlot=False, savePlot=False):
+    def score(self, testing_set, hashtag=None, showPlot=False, savePlot=False):
         """
         Compute benchmarks according to the testing dataset
         """
@@ -117,7 +118,7 @@ class RegressionModel:
             np.mean((predictions - Y_test) ** 2))
         # Variance score: 1 is perfect prediction
         print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
-        self.plot_testing_error(Y_test, predictions, showPlot, savePlot)
+        self.plot_testing_error(Y_test, predictions, hashtag=hashtag, showPlot=showPlot, savePlot=savePlot)
 
     def predict(self, features):
         """
@@ -152,14 +153,17 @@ class RegressionModel:
         except:
             return False
 
-    def plot_testing_error(self, expected, predicted, showPlot=True, savePlot=False):
+    def plot_testing_error(self, expected, predicted, hashtag=None, showPlot=True, savePlot=False):
         # Plot
         if showPlot or savePlot:
             plt.subplot(211)
             plt.axis([0, max(expected), min(predicted), max(expected)])
             plt.xlabel('Expected ' + FeatureExtractor.VIRALITY_LABEL[0])
             plt.ylabel('Predicted ' + FeatureExtractor.VIRALITY_LABEL[0])
-            plt.title('Prediction score on testing data ({} tweets)'.format(len(expected)))
+            if hashtag is not None:
+                plt.title('Prediction score on testing data (#{}, {} tweets)'.format(hashtag, len(expected)))
+            else:
+                plt.title('Prediction score on testing data ({} tweets)'.format(len(expected)))
             plt.plot(expected, predicted, 'o')
 
             plt.subplot(212)
