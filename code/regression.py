@@ -1,5 +1,7 @@
 from sklearn import linear_model
 from featureExtractor import FeatureExtractor
+import matplotlib.pyplot as plt
+from dataAnalysis import DataAnalyser
 import numpy as np
 import pickle
 import random
@@ -9,6 +11,8 @@ class RegressionModel:
     TRAINING_SIZE = 0.8
     # Serialization file
     SERIALIZATION_FILE = "../data/regression_model"
+    # Prediction error plot file
+    ERROR_PLOT_FILENAME = "prediction_error.png"
 
     @staticmethod
     def load_datasets(balance=False, viral_threshold=0):
@@ -91,9 +95,10 @@ class RegressionModel:
         # Model training
         self.clf = linear_model.BayesianRidge(normalize=normalize)
         self.clf.fit(X_train, Y_train)
+        # Model coefficients
         print "> Coefficients: ", list(self.clf.coef_)
 
-    def score(self, testing_set):
+    def score(self, testing_set, plot=False):
         """
         Compute benchmarks according to the testing dataset
         """
@@ -102,12 +107,25 @@ class RegressionModel:
         X_test = testing_set[:, :-1]
         # Retweet count
         Y_test = testing_set[:, -1]
-        # Model coefficients
+
+        predictions = self.clf.predict(X_test)
+
         # Mean squared error
         print "> Residual sum of squares: {:.2f}".format(
-            np.mean((self.clf.predict(X_test) - Y_test) ** 2))
+            np.mean((predictions - Y_test) ** 2))
         # Variance score: 1 is perfect prediction
         print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
+
+        # Plot
+        if plot:
+            plt.axis([0, max(Y_test), 0, max(predictions) * 1.1 ])
+            plt.xlabel('Expected ' + DataAnalyser.VIRALITY_LABEL[0])
+            plt.ylabel('Predicted ' + DataAnalyser.VIRALITY_LABEL[0])
+            plt.title('Prediction error on testing data ({} tweets)'.format(len(X_test)))
+            plt.plot(Y_test, predictions, 'o')
+            plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.ERROR_PLOT_FILENAME, format='png')
+            plt.show()
+
 
     def predict(self, features):
         """
@@ -149,5 +167,5 @@ if __name__ == "__main__":
     if not model.load():
         model.train(training_set, normalize=True)
         # model.dump()
-    model.score(testing_set)
+    model.score(testing_set, plot=True)
     # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
