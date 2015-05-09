@@ -10,7 +10,7 @@ class HashtagIndex:
             self.loadIndex()
         except:
             print "Index file not found"
-            self.generateIndex("Twitter", "Tweets")
+            self.generateIndex("Twitter", "NewTweets")
 
     # Generate index and save to .pkl file
     def generateIndex(self, outputDatabaseName, collectionName):
@@ -18,7 +18,7 @@ class HashtagIndex:
             conn=pymongo.MongoClient()
             outputDB = conn[outputDatabaseName]
             collection = outputDB[collectionName]
-            print "Building inverted index..."
+            print "Building inverted index from database..."
             # Query database for tweets containing hashtags
             test = collection.find({"entities.hashtags.text" : {"$exists": True}})
             for tweet in test:
@@ -36,15 +36,17 @@ class HashtagIndex:
 
     # Save index to file
     def saveIndex(self):
-        print "Saving index to file"
+        print "Saving hashtag index to file..."
         with open(HashtagIndex.INDEX_FILEPATH + ".pkl", "wb") as f:
             pickle.dump(self.index, f, pickle.HIGHEST_PROTOCOL)
+        print "Done saving the hashtag index"
 
     # Load index from file
     def loadIndex(self):
-        print "Loading hashtags index..."
+        print "Loading hashtag index..."
         with open(HashtagIndex.INDEX_FILEPATH + ".pkl", "rb") as f:
             self.index = pickle.load(f)
+        print "Done loading the hashtag index"
 
     # Returns a list of tweet ID's for the given hashtag
     def find(self, hashtag):
@@ -54,22 +56,17 @@ class HashtagIndex:
             return []
 
     def keys(self):
-        """
-        Return an array of hashtags
-        """
+        # Return an array of hashtags
         return self.index.keys()
 
     def values(self):
-        """
-        Return an array of arrays of tweets ID
-        """
+        # Return an array of arrays of tweets ID
         return self.index.values()
 
     def items(self, sort=False, descending=False, min_values=0):
-        """
-        Return the index items, possibly sorted by ascending or descending (descending=True) order
-        Only the items having more than min_values values are returned
-        """
+        
+        # Return the index items, possibly sorted by ascending or descending (descending=True) order
+        # Only the items having more than min_values values are returned
         if min_values > 1:
             result = [(k, v) for (k, v) in self.index.items() if len(v) >= min_values]
         else:
@@ -83,4 +80,4 @@ class HashtagIndex:
 if __name__ == "__main__":
     hashtagIndex = HashtagIndex()
     print hashtagIndex.find("nomore") # Should print [592958600357793793L]
-    print hashtagIndex.find('OneDirection')
+    print len(hashtagIndex.find('OneDirection')) # Should print 105
