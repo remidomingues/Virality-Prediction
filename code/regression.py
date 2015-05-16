@@ -23,6 +23,7 @@ class RegressionModel:
         """
         # Import data
         _, features, virality = FeatureExtractor.load(force=True)
+        print features.shape
         print "Building datasets..."
         # Concatenate the arrays into one along the second axis
         data = np.c_[features, np.array(virality)[:, 0]]
@@ -34,9 +35,14 @@ class RegressionModel:
         np.random.shuffle(data)
         # Split dataset into training and testing sets
         size = int(len(data) * RegressionModel.TRAINING_SIZE)
+
+        # why  was the test set having overlap with the traning set earlier.
         training_set = data[:size]
-        testing_set = data[len(data)-size:]
+        testing_set = data[size:]
+
         return training_set, testing_set
+
+
 
     @staticmethod
     def __balance_virality(dataset, threshold):
@@ -78,19 +84,22 @@ class RegressionModel:
 
         return np.vstack((dataset, new_tweets))
 
+
     @staticmethod
     def __dataset_range(data):
         print "Range of feature and virality values:"
         print "> min={}".format(list(np.min(data, axis=0)))
         print "> max={}".format(list(np.max(data, axis=0)))
 
+
     def train(self, training_set, normalize=False, showPlot=False, savePlot=False):
         """
-        Train the classifier
-        """
+        Train the classifier        """
         print "Training model..."
         # Features
         X_train = training_set[:, :-1]
+        print "Training shape"
+        print X_train.shape
         # Retweet count
         Y_train = training_set[:, -1]
 
@@ -99,7 +108,34 @@ class RegressionModel:
         self.clf.fit(X_train, Y_train)
         # Model coefficients
         print "> Coefficients: ", list(self.clf.coef_)
-        self.plot_coefficients(showPlot, savePlot)
+        self.plot_coefficients(showPlot, savePlot, 1)
+
+
+    def train2(self, training_set, normalize=False, showPlot=False, savePlot=False):
+        """
+        Train a LR model with the training set data.
+        """
+        X_train = training_set[:, :-1]
+        # Retweet count
+
+        Y_train = training_set[:, -1]
+        median = np.median(Y_train)
+
+        print "Training Median"
+        print median
+
+        Y = np.zeros_like(Y_train)
+        Y[Y_train > median] =1 
+        print set(Y)
+
+        self.LR = linear_model.LogisticRegression(penalty='l2')
+        self.LR.fit(X_train, Y)
+        
+        print "> LR Coefficients: ", list(self.LR.coef_)
+        self.plot_coefficients(showPlot, savePlot, 2)
+
+        
+
 
     def score(self, testing_set, hashtag=None, showPlot=False, savePlot=False):
         """
@@ -110,23 +146,51 @@ class RegressionModel:
         X_test = testing_set[:, :-1]
         # Retweet count
         Y_test = testing_set[:, -1]
+        # print X_test.shape
 
         predictions = self.predict(X_test)
 
         # Mean squared error
         print "> Residual sum of squares: {:.2f}".format(
             np.mean((predictions - Y_test) ** 2))
+
+        print "Success Rate:"
+        print  np.sqrt(np.mean((predictions - Y_test) **2))
         # Variance score: 1 is perfect prediction
         print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
-        self.plot_testing_error(Y_test, predictions, hashtag=hashtag, showPlot=showPlot, savePlot=savePlot)
+        # self.plot_testing_error(Y_test, predictions, hashtag=hashtag, showPlot=showPlot, savePlot=savePlot)
+
+
+    def scoreLR(self, testing_set):
+        """
+        Score according to the LR model.
+        """
+        X_test = testing_set[:, :-1]
+        Y_test = testing_set[:, -1]
+
+        test_median = np.median(Y_test)
+        print "Test Median"
+        print test_median
+
+        Y = np.zeros_like(Y_test)
+        Y[Y_test > test_median] = 1
+
+        Ypreds = self.LR.predict(X_test)
+        tp = np.sum(Y == Ypreds)
+        sr = tp / float(len(Y))
+        print sr
+
+
 
     def predict(self, features):
         """
         Predict the retweet counts for every tweet based on their features
         """
         result = np.array(self.clf.predict(features))
+
         result[result < 0] = 0
         return result
+
 
     def load(self):
         """
@@ -178,9 +242,18 @@ class RegressionModel:
             if showPlot:
                 plt.show()
 
-    def plot_coefficients(self, showPlot=True, savePlot=False):
+
+
+
+    def plot_coefficients(self, showPlot=True, savePlot=False, ctype =1):
         if showPlot or savePlot:
-            y = list(self.clf.coef_)
+            if ctype == 1:
+                y = list(self.clf.coef_)
+            elif ctype == 2:
+                y = self.LR.coef_.ravel().tolist()
+                factor = 100000000 
+                y = map(lambda x: x*factor, y)
+
             x = np.arange(len(y))
 
             fig = plt.figure()
@@ -202,6 +275,8 @@ if __name__ == "__main__":
     model = RegressionModel()
     if not model.load():
         model.train(training_set, normalize=True, showPlot=True, savePlot=False)
+        model.train2(training_set, normalize= True, showPlot=True)
         # model.dump()
     model.score(testing_set, showPlot=True, savePlot=False)
+    model.scoreLR(testing_set)
     # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
