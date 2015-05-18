@@ -23,10 +23,10 @@ class RegressionModel:
         """
         # Import data
         _, features, virality = FeatureExtractor.load(force=True)
-        print features.shape
         print "Building datasets..."
         # Concatenate the arrays into one along the second axis
         data = np.c_[features, np.array(virality)[:, 0]]
+
         RegressionModel.__dataset_range(data)
         # Duplicate viral tweets to balance the dataset
         if balance:
@@ -128,7 +128,27 @@ class RegressionModel:
         self.LR.fit(X_train, Y)
 
         print "> LR Coefficients: ", list(self.LR.coef_)
-        self.plot_coefficients(showPlot, savePlot, 2)
+        self.plot_coefficients(showPlot, savePlot, 1)
+
+    ''' 
+    This function normalises all the features manually 
+    x =  (x-mean/ sigma)
+
+    '''
+
+    def normaliseFeats(self, training_set):
+        final_training_set = np.copy(training_set)
+        meanVec = np.mean(final_training_set, axis = 0)
+        stdVec = np.std(final_training_set, axis = 0)
+
+        meanMat = np.tile(meanVec.transpose(), (training_set.shape[0], 1))
+        stdMat = np.tile(stdVec.transpose(), (training_set.shape[0], 1))  
+
+        final_training_set = (final_training_set - meanMat) / stdMat
+
+        return final_training_set
+
+
 
     def score(self, testing_set, hashtag=None, showPlot=False, savePlot=False):
         """
@@ -153,6 +173,8 @@ class RegressionModel:
         print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
         self.plot_testing_error(Y_test, predictions, hashtag=hashtag, showPlot=showPlot, savePlot=savePlot)
 
+
+
     def scoreLR(self, testing_set, showPlot=True, savePlot=False):
         """
         Score according to the LR model.
@@ -176,6 +198,7 @@ class RegressionModel:
         predictions[predictions < 0] = 0
         self.plot_testing_error(Y_test, predictions, showPlot=showPlot, savePlot=savePlot)
 
+
     def predict(self, features):
         """
         Predict the retweet counts for every tweet based on their features
@@ -184,6 +207,7 @@ class RegressionModel:
 
         result[result < 0] = 0
         return result
+
 
     def load(self):
         """
@@ -198,6 +222,7 @@ class RegressionModel:
             print "> Could not load regression model"
             return False
 
+
     def dump(self):
         """
         Export the classifier in a binary file
@@ -209,6 +234,8 @@ class RegressionModel:
             return True
         except:
             return False
+
+
 
     def plot_testing_error(self, expected, predicted, hashtag=None, showPlot=True, savePlot=False):
         # Plot
@@ -235,6 +262,7 @@ class RegressionModel:
             if showPlot:
                 plt.show()
 
+
     def plot_coefficients(self, showPlot=True, savePlot=False, ctype =1):
         if showPlot or savePlot:
             if ctype == 1:
@@ -260,16 +288,30 @@ class RegressionModel:
                 plt.show()
 
 
+
+
+
 if __name__ == "__main__":
     training_set, testing_set = RegressionModel.load_datasets(balance=True, viral_threshold=50000)
+    
     model = RegressionModel()
+
+    #  normalise all the features individually, this way, the weights of all the features will be on 
+    #   equal par, and scale will not have any influence 
+
+    NFEAT = 1
+
+    if NFEAT == 1:
+        training_set = model.normaliseFeats(training_set)
+        testing_set = model.normaliseFeats(testing_set)
+
     if not model.load():
-        model.train(training_set, normalize=True, showPlot=True, savePlot=False)
-        # model.dump()
-    model.score(testing_set, showPlot=True, savePlot=False)
+        model.train(training_set, normalize=True, showPlot=True, savePlot=True)
+
+    model.score(testing_set, showPlot=True, savePlot=True)
 
     print "\n"
-    model.train2(training_set, normalize= True, showPlot=True, savePlot=False)
-    model.scoreLR(testing_set, showPlot=True, savePlot=False)
+    model.train2(training_set, normalize= True, showPlot=False, savePlot=True)
+    model.scoreLR(testing_set, showPlot=True, savePlot=True)
 
     # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
