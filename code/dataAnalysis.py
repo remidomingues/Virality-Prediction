@@ -29,7 +29,7 @@ class DataAnalyser:
         for feature in FeatureExtractor.FEATURE_LABEL:
             print "Feature: " + feature
             df.plot(x=feature, y=FeatureExtractor.VIRALITY_LABEL[0], kind='scatter')
-            plt.savefig(DataAnalyser.PLOT_DIR+feature+"Retweet_count.png", format='png')
+            plt.savefig(DataAnalyser.PLOT_DIR+feature+".png", format='png')
             plt.clf()  # Clear the figure for the next loop
 
 

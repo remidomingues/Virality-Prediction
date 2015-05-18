@@ -42,8 +42,6 @@ class RegressionModel:
 
         return training_set, testing_set
 
-
-
     @staticmethod
     def __balance_virality(dataset, threshold):
         """
@@ -84,7 +82,6 @@ class RegressionModel:
 
         return np.vstack((dataset, new_tweets))
 
-
     @staticmethod
     def __dataset_range(data):
         print "Range of feature and virality values:"
@@ -110,7 +107,6 @@ class RegressionModel:
         print "> Coefficients: ", list(self.clf.coef_)
         self.plot_coefficients(showPlot, savePlot, 1)
 
-
     def train2(self, training_set, normalize=False, showPlot=False, savePlot=False):
         """
         Train a LR model with the training set data.
@@ -125,17 +121,14 @@ class RegressionModel:
         print median
 
         Y = np.zeros_like(Y_train)
-        Y[Y_train > median] =1 
+        Y[Y_train > median] =1
         print set(Y)
 
         self.LR = linear_model.LogisticRegression(penalty='l2')
         self.LR.fit(X_train, Y)
-        
+
         print "> LR Coefficients: ", list(self.LR.coef_)
         self.plot_coefficients(showPlot, savePlot, 2)
-
-        
-
 
     def score(self, testing_set, hashtag=None, showPlot=False, savePlot=False):
         """
@@ -158,10 +151,9 @@ class RegressionModel:
         print  np.sqrt(np.mean((predictions - Y_test) **2))
         # Variance score: 1 is perfect prediction
         print "> Variance score: %.3f" % self.clf.score(X_test, Y_test)
-        # self.plot_testing_error(Y_test, predictions, hashtag=hashtag, showPlot=showPlot, savePlot=savePlot)
+        self.plot_testing_error(Y_test, predictions, hashtag=hashtag, showPlot=showPlot, savePlot=savePlot)
 
-
-    def scoreLR(self, testing_set):
+    def scoreLR(self, testing_set, showPlot=True, savePlot=False):
         """
         Score according to the LR model.
         """
@@ -180,7 +172,9 @@ class RegressionModel:
         sr = tp / float(len(Y))
         print sr
 
-
+        predictions = np.array(self.LR.predict(X_test))
+        predictions[predictions < 0] = 0
+        self.plot_testing_error(Y_test, predictions, showPlot=showPlot, savePlot=savePlot)
 
     def predict(self, features):
         """
@@ -190,7 +184,6 @@ class RegressionModel:
 
         result[result < 0] = 0
         return result
-
 
     def load(self):
         """
@@ -242,16 +235,13 @@ class RegressionModel:
             if showPlot:
                 plt.show()
 
-
-
-
     def plot_coefficients(self, showPlot=True, savePlot=False, ctype =1):
         if showPlot or savePlot:
             if ctype == 1:
                 y = list(self.clf.coef_)
             elif ctype == 2:
                 y = self.LR.coef_.ravel().tolist()
-                factor = 100000000 
+                factor = 100000000
                 y = map(lambda x: x*factor, y)
 
             x = np.arange(len(y))
@@ -275,8 +265,11 @@ if __name__ == "__main__":
     model = RegressionModel()
     if not model.load():
         model.train(training_set, normalize=True, showPlot=True, savePlot=False)
-        model.train2(training_set, normalize= True, showPlot=True)
         # model.dump()
     model.score(testing_set, showPlot=True, savePlot=False)
-    model.scoreLR(testing_set)
+
+    print "\n"
+    model.train2(training_set, normalize= True, showPlot=True, savePlot=False)
+    model.scoreLR(testing_set, showPlot=True, savePlot=False)
+
     # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
