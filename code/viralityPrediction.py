@@ -5,9 +5,14 @@ from dataAnalysis import DataAnalyser
 import matplotlib.pyplot as plt
 import numpy as np
 import math
+import operator
 
 class ViralityPrediction:
     SCORE_PLOT_FILENAME = "hashtags_score.png"
+    # If CLASSIFICATION is set to True, classification is used, otherwise regression
+    CLASSIFICATION = True
+    # K defines the number of results in the Top-K virality predictions
+    K = 10
 
     def __init__(self, normalize=False, balance=False, tweet_threshold=0, score=False, dump_model=True):
         """
@@ -17,11 +22,21 @@ class ViralityPrediction:
         if not self.model.load():
             training_set, testing_set = RegressionModel.load_datasets(
                 balance=balance, viral_threshold=tweet_threshold)
-            self.model.train(training_set, normalize=normalize)
-            if score:
-                self.model.score(testing_set)
+
+            if ViralityPrediction.CLASSIFICATION == True:
+                training_set = self.model.normaliseFeats(training_set)
+                testing_set = self.model.normaliseFeats(testing_set)
+                self.model.trainClassifier(training_set, normalize=normalize)
+                if score:
+                    self.model.scoreClassifier(testing_set)
+
+            else:
+                self.model.trainRegression(training_set, normalize=normalize)
+                if score:
+                    self.model.scoreRegression(testing_set)
+
             if dump_model:
-                self.model.dump()
+                    self.model.dump()
 
     def predict(self, hashtags, hashtag_threshold=None):
         """
@@ -36,7 +51,10 @@ class ViralityPrediction:
         """
         values = {}
         for key, value in hashtags.iteritems():
-            tweets_values = self.model.predict(value)
+            if ViralityPrediction.CLASSIFICATION:
+                tweets_values = self.model.predictClassifier(value)
+            else:
+                tweets_values = self.model.predictRegression(value)
             hashtag_value = sum(tweets_values)
             if hashtag_threshold is not None:
                 if hashtag_value >= hashtag_threshold:
@@ -78,14 +96,13 @@ class ViralityPrediction:
 
 if __name__ == "__main__":
     vp = ViralityPrediction(normalize=True, balance=True, tweet_threshold=50000,
-        score=True, dump_model=False)
+        score=False, dump_model=False)
     hashtagIndex = HashtagIndex()
 
     virality = {}
     hashtags_features = {}
     hashtags_virality = {}
-    hashtags = ['OneDirection', 'news', 'bigbang', 'nowplaying']
-    # hashtags = [k for (k, v) in hashtagIndex.items(sort=True, descending=True, min_values=5000)]
+    hashtags = [k for (k, v) in hashtagIndex.items(sort=True, descending=True, min_values=100)]
     print "Extracting features..."
     for hashtag in hashtags:
         _, featureList, vir = FeatureExtractor.loadFromDB(tweets_id=hashtagIndex.find(hashtag))
@@ -93,11 +110,16 @@ if __name__ == "__main__":
         hashtags_virality[hashtag] = vir
         virality[hashtag] = sum(np.array(vir)[:, 0])
 
-    result = vp.predict(hashtags_features)
-    print "\nVirality scores:"
-    print "> Predicted hashtags virality: {}".format(result)
-    # print vp.predict(hashtags_features, hashtag_threshold=50) # Binary virality output
-    print "> Expected hashtags virality: {}".format(virality)
-    rss = vp.score(np.array([virality[h] for h in hashtags]),
-        np.array([result[h] for h in hashtags]), labels=hashtags, showPlot=True, savePlot=False)
-    print "> Residual sum of squares: {:.2f}".format(rss)
+    # Sort predictions by value and print top-K results
+    predictions = vp.predict(hashtags_features)
+    sorted_predictions = sorted(predictions.items(), key=operator.itemgetter(1), reverse=True)
+    print "\nTop " + str(ViralityPrediction.K) + " virality predictions:"
+    for i in range(0, min(ViralityPrediction.K, len(sorted_predictions))):
+        print sorted_predictions[i]
+
+    # Sort expected virality by value and print top-K results
+    #sorted_virality = sorted(virality.items(), key=operator.itemgetter(1), reverse=True)
+    #print "\nTop " + str(ViralityPrediction.K) + " virality expectations:"
+    #for i in range(0, min(ViralityPrediction.K, len(sorted_virality))):
+    #    print sorted_virality[i]
+    
