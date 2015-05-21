@@ -327,7 +327,7 @@ class RegressionModel:
 
 
 if __name__ == "__main__":
-    training_set, testing_set = RegressionModel.load_datasets(balance=True, viral_threshold=50000)
+    training_set, testing_set = RegressionModel.load_datasets(balance=True, viral_threshold=55000)
     
     model = RegressionModel()
 
