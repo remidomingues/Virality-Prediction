@@ -2,7 +2,7 @@ Virality Prediction
 ===================
 Overview
 --------
-This project aims at predicting the virality of a hashtag on Twitter based on a regression model trained by a machine learning algorithm.
+This project aims at predicting the virality of tweets and hashtags on Twitter based on a regression model and a classifier trained by a machine learning algorithms.
 
 Technologies
 ------------
@@ -26,8 +26,9 @@ Run
     - Execute the shell command `mongo`
     - In the mongo shell, execute `db.Tweets.createIndex({id: 1}, {unique: true, dropDups: true})`
 4. Execute `python retweetUpdater.py` a few days later to update the number of retweets of each tweet. This timeframe will be the one of your model when predicting the virality of a tweet or hashtag
-5. Predict the virality of the hashtag specified in the following script: `python viralityPrediction.py`. This step can be replaced by the following ones:
+5. Predict the virality of previously retrieved hashtags: `python viralityPrediction.py`. This step can be replaced by the following ones:
     - Extract the features from the tweets stored in database: `python featuresExtractor.py`
-    - Train your regression model to predict the number of retweets based on the features: `python regression.py`
+    - Train your regression model or classifier to predict the number of retweets or the tweet virality class based on the features: `python regression.py`
     - Build an inverted index, giving a list of tweets for each hashtag: `python hashtagIndex.py`
-    - Predict the virality of a hashtag: `python viralityPrediction.py`
+    - Predict the virality of hashtags: `python viralityPrediction.py`
+6. Predict the virality of new hashtags using current tweets: use `python twitterSearch.py` to retrieve tweets IDs from the Twitter API for a given hashtag. When you have retrieved the features for each tweet, you can feed those features to `viralityPrediction.py` in order to output a retweet count or virality prediction
