@@ -1,0 +1,189 @@
+\ProvidesPackage{report}
+%ifdef TWOSIDE
+	%\usepackage[twoside, width=16cm, height=24cm, bindingoffset=2cm]{geometry}
+%elif ONESIDE
+	\usepackage{geometry}
+	\geometry{hmargin=2.5cm, vmargin=3cm}
+%endif
+
+\usepackage{lipsum}
+\usepackage{pdfpages}
+\usepackage{float}
+
+%\usepackage{layout}
+%\setlength{\marginparwidth}{0pt}
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%\usepackage[pdftex]{graphicx}
+\usepackage{setspace}
+\usepackage[english]{varioref}
+\usepackage[square, numbers]{natbib}
+\usepackage{booktabs}
+\usepackage{array}
+
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{language=Java,
+    frame=tb,
+    language=Java,
+    aboveskip=3mm,
+    belowskip=3mm,
+    showstringspaces=false,
+    columns=flexible,
+    basicstyle={\small\ttfamily},
+    numbers=none,
+    numberstyle=\tiny\color{gray},
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    breaklines=true,
+    breakatwhitespace=true
+    tabsize=3
+}
+
+%ifdef PRINTED
+	%\usepackage[colorlinks=true, linkcolor=black, citecolor=black, urlcolor=black]{hyperref}
+%elif ELECTRONIC
+	\usepackage[colorlinks=true, linkcolor=blue, citecolor=green, urlcolor=black]{hyperref}
+%endif
+
+\usepackage{longtable} %Gère les tableaux dépassant une page
+\setlongtables
+\usepackage{multirow} %Gère les cecllules fusionnées dans les tableaux
+
+\usepackage{enumerate}
+\usepackage{eurosym}
+\usepackage{wrapfig}
+\usepackage{listings} %Gère la citation de code source (+ coloration syntaxique, +retour à la ligne automatique)
+\usepackage{amsfonts}
+
+\usepackage{pdflscape} %Gère le changement ponctuel de l'orientation d'une page (paysage/portrait)
+
+\renewcommand{\lstlistingname}{Code source}
+
+% ================== SOULIGNEMENT ================== %
+\usepackage[normalem]{ulem} %Package gérant le soulignement
+%Définition de commandes pour souligner en tirets
+\def\dashuline{\bgroup
+  \ifdim\ULdepth=\maxdimen  % Set depth based on font, if not set already
+   \settodepth\ULdepth{(j}\advance\ULdepth.4pt\fi
+  \markoverwith{\kern.15em
+  \vtop{\kern\ULdepth \hrule width .3em}%
+  \kern.15em}\ULon}
+\def\dotuline{\bgroup
+  \ifdim\ULdepth=\maxdimen  % Set depth based on font, if not set already
+   \settodepth\ULdepth{(j}\advance\ULdepth.4pt\fi
+  \markoverwith{\begingroup
+  \advance\ULdepth0.08ex
+  \lower\ULdepth\hbox{\kern.15em .\kern.1em}%
+  \endgroup}\ULon}
+
+% ================== INDEX ================== %
+\usepackage{makeidx}
+\usepackage{multicol}
+\makeindex
+
+
+\PrerenderUnicode{é}
+
+% ================== GLOSSAIRE ================== %
+\usepackage[style=listgroup,footnote,acronym,nonumberlist]{glossaries} %nonumberlist
+%\renewcommand*{\glstextformat}[1]{#1} %Permet de mettre en forme un mot du glossaire cité
+
+\defglsdisplayfirst{\uwave{#1#4}} %Première apparition des mots du glossaire
+\defglsdisplay{\uwave{#1#4}} %Apparitions des mots du glossaire autres que la première
+
+%\defglsdisplayfirst[\acronymtype]{\uuline{\acronymfont{#1}#4}} %Première apparition des acronymes (à n'utiliser que sans l'option footnote, car sinon la footnote est écrasée et n'est pas créée).
+%\defglsdisplay[\acronymtype]{\texttt{\acronymfont{#1}#4}} %Apparitions des acronymes autres que la première
+
+%\makeatletter
+%    \defglsdisplayfirst[\acronymtype]{%
+%    \firstacronymfont{#1}#4\noexpand\protect\noexpand\footnote{%
+%       \noexpand\protect\noexpand\glslink
+%         [\@gls@link@opts]{\@gls@link@label}{#2}}}%
+%\makeatother
+
+\renewcommand{\firstacronymfont}[1]{\textsc{#1}}
+\renewcommand{\acronymfont}[1]{\bsc{#1}}
+
+%\makeatletter
+%   \defglsdisplayfirst[\acronymtype]{%
+%     \firstacronymfont{#1}#4\noexpand\protect\noexpand\footnote{%
+%     \noexpand\protect\noexpand\glslink
+%       [\@gls@link@opts]{\@gls@link@label}{#3}}}%
+%\makeatother
+
+\makeglossaries
+%Permet d'avoir les bons headers pour les glossaires (implique la déclaration de chapitres vides avant chaque \printglossary)
+\makeatletter
+\renewcommand*{\glossarysection}[2][\@gls@title]{%
+\def\@gls@title{#2}%
+\@ifundefined{phantomsection}{%
+\@glossarysection{#1}{#2}}{\@p@glossarysection{#1}{#2}}%
+}
+\makeatother
+
+
+
+
+
+
+
+\usepackage[nottoc,notlof]{tocbibind}
+
+%\renewcommand{\appendixtocname}{Annexes}
+%\renewcommand{\appendixpagename}{Annexes}
+
+
+
+%Enlève la ligne « Chapitre x » dans la page de garde des chapitres
+%\makeatletter
+%\renewcommand{\@makechapterhead}[1]{%
+%\vspace*{50 pt}%
+%{\setlength{\parindent}{0pt} \raggedright \normalfont
+%\bfseries\Huge
+%\ifnum \value{secnumdepth}>1
+%   \if@mainmatter\thechapter.\ \fi%
+%\fi
+%#1\par\nobreak\vspace{40 pt}}}
+%\makeatother
+
+%Change le pagestyle des chapitres (pour que la numérotation des pages ne soit pas en bas et centrée).
+%\makeatletter
+%\renewcommand\chapter{\if@openright\cleardoublepage\else\clearpage\fi
+%                    \thispagestyle{headings}%
+%                    \global\@topnum\z@
+%                    \@afterindentfalse
+%                    \secdef\@chapter\@schapter}
+%\makeatother
+
+
+
+% ================== IMAGES ================== %
+\newcommand{\image}[5]{
+\begin{figure}[#5]
+\centerline{\includegraphics[width=#4mm]{images/#2}}
+\caption{#3}
+\label{#1}
+\end{figure}
+}
+
+
+% ================== PAGE BLANCHE ================== %
+\newcommand{\whitepage}{
+\thispagestyle{empty}
+\newpage
+\null
+\newpage
+}
+
+
+% ================= SIÈCLE ================ %
+\def\siecle#1{\textsc{\romannumeral #1}\textsuperscript{e}~siècle}

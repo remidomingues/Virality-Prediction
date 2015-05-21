@@ -1,0 +1,76 @@
+\documentclass[a4paper,12pt,final,oneside,openright]{article}
+\usepackage{report}
+
+\newcommand{\reporttitle}{Search Engines and Information Retrieval Systems}
+\newcommand{\enseignants}{
+Johan Boye\\
+Carl Eriksson\\
+Jussi Karlg\\
+Hedvig Kjellström\\
+Sahar Asadi\\
+Roelof Pieters}
+
+\newcommand{\reportauthor}{
+Benjamin Coors\\
+Rémi Domingues\\
+Håkan Eriksson\\
+Paul Griffin\\
+Akash Kumar Dhaka}
+% \newcommand{\hexanome}{H4211}
+\newcommand{\reportsubject}{}
+\newcommand{\stagetopic}{Virality Prediction}
+\newcommand{\dateperiod}{April $15^{th}$ - May $22^{nd}$}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\setlength{\parskip}{1ex} % Espace entre les paragraphes
+
+\hypersetup{
+    pdftitle={\reporttitle},%
+    pdfauthor={\reportauthor},%
+    pdfsubject={\reportsubject},%
+    pdfkeywords={}
+}
+
+\title{\reporttitle}
+\author{\reportauthor}
+
+\setlongtables
+\usepackage[font=small,skip=0pt]{caption}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+
+
+%\setcounter{tocdepth}{4}
+\begin{document}
+    \renewcommand{\chaptername}{} %\renewcommand{\thechapter}{}
+    \renewcommand{\contentsname}{Contents}
+
+    \pagestyle{empty}
+    \pagenumbering{arabic}
+    \input{title}
+    \pagebreak
+    \sloppy          % Justification moins stricte : des mots ne dépasseront pas des paragraphes
+
+%     %\frontmatter
+%     \thispagestyle{empty}
+%     \tableofcontents
+%     \addtocontents{toc}{\protect\thispagestyle{empty}}
+%     \pagebreak
+
+    %\mainmatter
+    \pagestyle{headings}
+    %\renewcommand{\chaptermark}[1]{\markboth{\MakeUppercase{\chaptername\ \thechapter.\ #1}}{}}
+    %\renewcommand{\sectionmark}[1]{\markright{\thesection{} #1}}
+
+	\setcounter{page}{1} % Ignore cover and toc
+    \input{content}
+% Removed to fit report on 10 pages
+%    \pagebreak
+    
+    \bibliographystyle{plain}
+    \renewcommand{\bibname}{References}
+    \bibliography{references}
+
+
+    %\backmatter
+\end{document}
