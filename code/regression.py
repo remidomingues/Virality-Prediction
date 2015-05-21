@@ -12,8 +12,10 @@ class RegressionModel:
     # Serialization file
     SERIALIZATION_FILE = "../data/regression_model"
     # Plot files
-    ERROR_PLOT_FILENAME = "prediction_error.png"
-    COEF_PLOT_FILENAME = "coefficients.png"
+    ERROR_PLOT_FILENAME_REGRESSION = "prediction_error_regression.png"
+    ERROR_PLOT_FILENAME_CLASSIFICATION = "prediction_error_classification.png"
+    COEF_PLOT_FILENAME_REGRESSION = "coefficients_regression.png"
+    COEF_PLOT_FILENAME_CLASSIFICATION = "coefficients_classification.png"
 
     @staticmethod
     def load_datasets(balance=False, viral_threshold=0):
@@ -89,7 +91,7 @@ class RegressionModel:
         print "> max={}".format(list(np.max(data, axis=0)))
 
 
-    def train(self, training_set, normalize=False, showPlot=False, savePlot=False):
+    def trainRegression(self, training_set, normalize=False, showPlot=False, savePlot=False):
         """
         Train the classifier        """
         print "Training model..."
@@ -104,10 +106,10 @@ class RegressionModel:
         self.clf = linear_model.BayesianRidge(normalize=normalize)
         self.clf.fit(X_train, Y_train)
         # Model coefficients
-        print "> Coefficients: ", list(self.clf.coef_)
+        print "> Regression coefficients: ", list(self.clf.coef_)
         self.plot_coefficients(showPlot, savePlot, 1)
 
-    def train2(self, training_set, normalize=False, showPlot=False, savePlot=False):
+    def trainClassifier(self, training_set, normalize=False, showPlot=False, savePlot=False):
         """
         Train a LR model with the training set data.
         """
@@ -127,8 +129,8 @@ class RegressionModel:
         self.LR = linear_model.LogisticRegression(penalty='l2')
         self.LR.fit(X_train, Y)
 
-        print "> LR Coefficients: ", list(self.LR.coef_)
-        self.plot_coefficients(showPlot, savePlot, 1)
+        print "> Classifier coefficients: ", list(self.LR.coef_)
+        self.plot_coefficients(showPlot, savePlot, 2)
 
     ''' 
     This function normalises all the features manually 
@@ -150,7 +152,7 @@ class RegressionModel:
 
 
 
-    def score(self, testing_set, hashtag=None, showPlot=False, savePlot=False):
+    def scoreRegression(self, testing_set, hashtag=None, showPlot=False, savePlot=False):
         """
         Compute benchmarks according to the testing dataset
         """
@@ -161,7 +163,7 @@ class RegressionModel:
         Y_test = testing_set[:, -1]
         # print X_test.shape
 
-        predictions = self.predict(X_test)
+        predictions = self.predictRegression(X_test)
 
         # Mean squared error
         print "> Residual sum of squares: {:.2f}".format(
@@ -175,7 +177,7 @@ class RegressionModel:
 
 
 
-    def scoreLR(self, testing_set, showPlot=True, savePlot=False):
+    def scoreClassifier(self, testing_set, showPlot=True, savePlot=False):
         """
         Score according to the LR model.
         """
@@ -190,22 +192,41 @@ class RegressionModel:
         Y[Y_test > test_median] = 1
 
         Ypreds = self.LR.predict(X_test)
-        tp = np.sum(Y == Ypreds)
-        sr = tp / float(len(Y))
-        print sr
 
-        predictions = np.array(self.LR.predict(X_test))
-        predictions[predictions < 0] = 0
-        self.plot_testing_error(Y_test, predictions, showPlot=showPlot, savePlot=savePlot)
+        Y_t = Y == Ypreds
+        Y_f = Y != Ypreds
+
+        tp = np.sum(Y[Y_t] == 1)
+        tn = np.sum(Y[Y_t] == 0)
+        fp = np.sum(Y[Y_f] == 0)
+        fn = np.sum(Y[Y_f] == 1)
+
+        t = tp + tn
+        f = fp + fn
+        tf = t + f
+        ratio = t / float(tf)
+
+        print "classifier accuracy: " + str(ratio)
+
+        values = (tp, tn, fp, fn)
+        self.plot_positiveNegatives(values, showPlot=showPlot, savePlot=savePlot)
 
 
-    def predict(self, features):
+    def predictRegression(self, features):
         """
         Predict the retweet counts for every tweet based on their features
         """
         result = np.array(self.clf.predict(features))
 
         result[result < 0] = 0
+        return result
+
+    def predictClassifier(self, features):
+        """
+        Predict the retweet counts for every tweet based on their features
+        """
+        result = np.array(self.LR.predict(features))
+
         return result
 
 
@@ -236,7 +257,6 @@ class RegressionModel:
             return False
 
 
-
     def plot_testing_error(self, expected, predicted, hashtag=None, showPlot=True, savePlot=False):
         # Plot
         if showPlot or savePlot:
@@ -258,7 +278,7 @@ class RegressionModel:
             plt.plot(expected, error, 'o')
 
             if savePlot:
-                plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.ERROR_PLOT_FILENAME, format='png')
+                plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.ERROR_PLOT_FILENAME_REGRESSION, format='png')
             if showPlot:
                 plt.show()
 
@@ -283,9 +303,24 @@ class RegressionModel:
             ax.set_title('Regression model coefficients')
 
             if savePlot:
-                plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.COEF_PLOT_FILENAME, format='png')
+                if ctype == 1:
+                    plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.COEF_PLOT_FILENAME_REGRESSION, format='png')
+                else:
+                    plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.COEF_PLOT_FILENAME_CLASSIFICATION, format='png')
             if showPlot:
                 plt.show()
+
+    def plot_positiveNegatives(self, values, showPlot=True, savePlot=False):
+        ind = np.arange(len(values))
+        width = 0.35
+        p1 = plt.bar(ind, values, width, color='b')
+        plt.ylabel('Count')
+        plt.xticks(ind+width/2., ('tp', 'tn', 'fp', 'fn') )        
+
+        if savePlot:
+            plt.savefig(DataAnalyser.PLOT_DIR + RegressionModel.ERROR_PLOT_FILENAME_CLASSIFICATION, format='png')
+        if showPlot:
+            plt.show()
 
 
 
@@ -296,22 +331,19 @@ if __name__ == "__main__":
     
     model = RegressionModel()
 
-    #  normalise all the features individually, this way, the weights of all the features will be on 
-    #   equal par, and scale will not have any influence 
+    # Train linear regression
+    model.trainRegression(training_set, normalize=True, showPlot=True, savePlot=True)
+    model.scoreRegression(testing_set, showPlot=True, savePlot=True)
 
-    NFEAT = 1
+    #  Normalise all the features individually before training classifier
+    #  this way, the weights of all the features will be on equal par 
+    #   and scale will not have any influence 
 
-    if NFEAT == 1:
-        training_set = model.normaliseFeats(training_set)
-        testing_set = model.normaliseFeats(testing_set)
+    training_set = model.normaliseFeats(training_set)
+    testing_set = model.normaliseFeats(testing_set)
 
-    if not model.load():
-        model.train(training_set, normalize=True, showPlot=True, savePlot=True)
-
-    model.score(testing_set, showPlot=True, savePlot=True)
-
+    # Train logistic regression classifier
     print "\n"
-    model.train2(training_set, normalize= True, showPlot=False, savePlot=True)
-    model.scoreLR(testing_set, showPlot=True, savePlot=True)
+    model.trainClassifier(training_set, normalize= True, showPlot=True, savePlot=True)
+    model.scoreClassifier(testing_set, showPlot=True, savePlot=True)
 
-    # print "Prediction samples: ", model.predict([testing_set[0][:-1], testing_set[1][:-1]])
